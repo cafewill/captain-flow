@@ -1,0 +1,1689 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>캡틴 FLOW — AI MANA</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg-main:#ffffff;--bg-panel:#f5f5f7;--bg-input:#ffffff;--bg-code:#1e2a1e;
+  --accent:#6db33f;--accent-dark:#4a8a28;--accent-light:#e8f5e0;--accent-glow:#6db33f33;
+  --border:#d8dde3;--border-focus:#6db33f;
+  --text-main:#1a1a1a;--text-sub:#555f6a;--text-muted:#8a9299;
+  --header-bg:#1a2a1a;--header-text:#ffffff;--code-text:#a8d8a8;
+  --shadow-sm:0 1px 4px rgba(0,0,0,0.08);--shadow-md:0 4px 16px rgba(0,0,0,0.10);
+  --panel-footer-height:52px;
+}
+html,body{height:100%;overflow:hidden;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Malgun Gothic','Apple SD Gothic Neo','Nanum Gothic',sans-serif;background:var(--bg-main);color:var(--text-main);display:flex;flex-direction:column;}
+/* ── HEADER ── */
+#header{background:var(--header-bg);height:56px;display:flex;align-items:center;padding:0 16px;gap:12px;flex-shrink:0;width:100%;}
+#header-left{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+#logo-icon{font-size:20px;}
+#logo-text{color:#fff;font-weight:700;font-size:16px;white-space:nowrap;}
+#header-badge{background:var(--accent);color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;white-space:nowrap;}
+#header-spacer{flex:1;}
+#header-right{display:flex;align-items:center;gap:8px;justify-content:flex-end;flex-shrink:0;}
+#model-badge{background:rgba(255,255,255,0.12);color:#fff;font-size:11px;padding:3px 10px;border-radius:20px;white-space:nowrap;display:none;}
+#server-status{display:flex;align-items:center;gap:4px;color:rgba(255,255,255,0.8);font-size:12px;white-space:nowrap;flex-shrink:0;}
+#server-dot{width:8px;height:8px;background:#6db33f;border-radius:50%;display:inline-block;}
+#lang-select{background:transparent;border:1px solid rgba(255,255,255,0.4);color:#fff;font-size:13px;padding:4px 25px 4px 8px;border-radius:6px;cursor:pointer;width:auto;min-width:unset;flex-shrink:1;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='white'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;}
+#lang-select option{background:#1a2a1a;color:#fff;}
+#lang-select:hover{background-color:rgba(255,255,255,0.1);}
+.header-btn{background:transparent;border:1px solid rgba(255,255,255,0.4);color:#fff;padding:5px 12px;border-radius:6px;cursor:pointer;font-size:13px;white-space:nowrap;flex-shrink:0;}
+.header-btn:hover{background:rgba(255,255,255,0.1);}
+/* ── WELCOME SCREEN ── */
+#welcome-screen{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--bg-main);}
+#welcome-main{font-size:20px;color:#555f6a;font-weight:600;text-align:center;}
+#welcome-sub{font-size:14px;color:#8a9299;margin-top:10px;text-align:center;}
+/* ── MAIN CONTAINER ── */
+#main-container{display:none;flex:1;overflow:hidden;}
+/* ── PANELS ── */
+.panel{display:flex;flex-direction:column;overflow:hidden;background:var(--bg-main);}
+#request-panel{width:50%;border-right:none;}
+#response-panel{width:50%;}
+/* ── DIVIDER ── */
+#panel-divider{width:5px;background:var(--border);border-left:1px solid var(--border);border-right:1px solid var(--border);cursor:col-resize;flex-shrink:0;position:relative;display:flex;align-items:center;justify-content:center;transition:background 0.15s;}
+#panel-divider:hover,#panel-divider.dragging{background:var(--accent);border-left-color:var(--accent);border-right-color:var(--accent);}
+#panel-divider::after{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:4px;height:32px;background:repeating-linear-gradient(to bottom,#8a9299 0px,#8a9299 3px,transparent 3px,transparent 7px);border-radius:2px;pointer-events:none;}
+#panel-divider:hover::after,#panel-divider.dragging::after{background:repeating-linear-gradient(to bottom,#6db33f 0px,#6db33f 3px,transparent 3px,transparent 7px);}
+/* ── PANEL HEADER ── */
+.panel-header{background:var(--bg-panel);padding:0 16px;height:44px;display:flex;align-items:center;border-bottom:1px solid var(--border);flex-shrink:0;}
+.panel-title{font-weight:700;font-size:13px;letter-spacing:1px;color:var(--text-main);}
+/* ── REQUEST PANEL BODY ── */
+#request-body{flex:1;overflow-y:auto;padding:12px 16px;display:flex;flex-direction:column;gap:10px;}
+.form-group{display:flex;flex-direction:column;gap:4px;}
+.form-label{font-size:12px;font-weight:600;color:var(--text-sub);}
+select,textarea{background:var(--bg-input);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:13px;color:var(--text-main);font-family:inherit;outline:none;transition:border-color 0.15s,box-shadow 0.15s;width:100%;}
+select{appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%236db33f'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px;cursor:pointer;}
+select:focus,textarea:focus{border-color:var(--border-focus);box-shadow:0 0 0 3px var(--accent-glow);}
+select:hover,textarea:hover{border-color:var(--border-focus);}
+textarea{resize:none;min-height:150px;line-height:1.6;}
+/* ── REQUEST FOOTER ── */
+#request-footer{height:var(--panel-footer-height);display:flex;align-items:center;gap:10px;padding:0 16px;border-top:1px solid var(--border);background:var(--bg-panel);flex-shrink:0;}
+#btn-send{flex:1;background:linear-gradient(135deg,#6db33f,#4a8a28);color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer;transition:all 0.15s;display:flex;align-items:center;justify-content:center;gap:6px;}
+#btn-send:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(109,179,63,0.4);}
+#btn-send:disabled{opacity:0.5;cursor:not-allowed;transform:none;}
+#btn-preview{background:transparent;border:1px solid var(--accent);color:var(--accent-dark);border-radius:8px;padding:8px 12px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;transition:background 0.15s;}
+#btn-preview:hover{background:var(--accent-light);}
+#btn-reset{background:transparent;border:1px solid var(--border);color:var(--text-sub);border-radius:8px;padding:8px 12px;font-size:13px;cursor:pointer;white-space:nowrap;transition:all 0.15s;}
+#btn-reset:hover{background:var(--bg-panel);border-color:var(--accent);}
+/* ── SPINNER ── */
+.spinner{width:14px;height:14px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin 0.8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+/* ── RESPONSE PANEL ── */
+#response-body{flex:1;overflow-y:auto;padding:16px;position:relative;}
+#response-wrap{min-height:100%;}
+.response-wrap ::selection{background:transparent;}
+.response-wrap ::-moz-selection{background:transparent;}
+/* ── TYPING CURSOR ── */
+.typing-cursor{display:inline-block;width:2px;height:14px;background:var(--accent);margin-left:2px;vertical-align:text-bottom;animation:blink 0.8s step-end infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:0;}}
+/* ── RESPONSE FOOTER ── */
+#response-footer{height:var(--panel-footer-height);display:flex;align-items:center;gap:10px;padding:0 16px;border-top:1px solid var(--border);background:var(--bg-panel);flex-shrink:0;}
+#token-counter{font-family:monospace;font-size:12px;color:var(--text-muted);}
+#token-count-val{color:var(--accent);font-weight:700;}
+#response-time{font-size:12px;color:var(--accent);font-family:monospace;display:none;}
+#response-footer-spacer{flex:1;}
+#btn-copy-response{background:var(--accent-light);color:var(--accent-dark);border:1px solid var(--accent);border-radius:6px;padding:5px 12px;font-size:12px;cursor:pointer;display:none;transition:all 0.15s;}
+#btn-copy-response:hover{background:var(--accent);color:#fff;}
+/* ── TOP/BOTTOM BUTTONS ── */
+#scroll-btns{position:absolute;bottom:16px;right:24px;display:none;flex-direction:column;gap:4px;z-index:10;}
+.scroll-btn{width:32px;height:32px;background:rgba(255,255,255,0.9);border:1px solid var(--border);border-radius:6px;color:var(--text-sub);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.10);transition:all 0.15s;}
+.scroll-btn:hover{background:var(--accent-light);border-color:var(--accent);color:var(--accent-dark);}
+/* ── MARKDOWN STYLES ── */
+.md-wrap{line-height:1.7;font-size:14px;}
+.md-wrap h1,.md-wrap h2{border-bottom:1px solid var(--border);padding-bottom:6px;margin:16px 0 8px;}
+.md-wrap h3{color:var(--accent);margin:14px 0 6px;}
+.md-wrap h1{font-size:1.5em;}
+.md-wrap h2{font-size:1.3em;}
+.md-wrap h3{font-size:1.1em;}
+.md-wrap strong{color:var(--text-main);font-weight:700;}
+.md-wrap code{background:var(--accent-light);color:#2d7a2d;border:1px solid #c8e6b0;border-radius:4px;padding:1px 5px;font-family:Consolas,'D2Coding',monospace;font-size:0.88em;}
+.md-wrap code ::selection{background:transparent;}
+.md-wrap code ::-moz-selection{background:transparent;}
+.md-wrap blockquote{border-left:3px solid var(--accent);background:#f0f9e8;padding:8px 12px;margin:8px 0;border-radius:0 6px 6px 0;}
+.md-wrap table{border-collapse:collapse;width:100%;margin:10px 0;}
+.md-wrap th{background:var(--accent-light);color:var(--accent-dark);text-transform:uppercase;font-size:12px;padding:8px 12px;border:1px solid var(--border);}
+.md-wrap td{padding:7px 12px;border:1px solid var(--border);}
+.md-wrap ul,.md-wrap ol{padding-left:24px;margin:8px 0;}
+.md-wrap li{margin:3px 0;}
+.md-wrap p{margin:6px 0;}
+/* ── CODE BLOCK ── */
+.code-block-wrap{border:1px solid var(--border);border-radius:10px;overflow:hidden;margin:10px 0;}
+.code-block-header{background:#1a2a1a;display:flex;align-items:center;justify-content:space-between;padding:6px 12px;}
+.code-lang{color:var(--accent);font-size:12px;font-family:monospace;}
+.btn-copy-code{background:transparent;border:1px solid rgba(255,255,255,0.3);color:#fff;font-size:11px;padding:2px 8px;border-radius:4px;cursor:pointer;transition:all 0.15s;}
+.btn-copy-code:hover{background:rgba(255,255,255,0.1);}
+.code-body{background:var(--bg-code);padding:14px;overflow-x:auto;}
+.code-body pre{margin:0;font-family:Consolas,'D2Coding',monospace;font-size:13px;color:var(--code-text);line-height:1.6;}
+.code-body ::selection{background:transparent;}
+.code-body ::-moz-selection{background:transparent;}
+/* ── MODAL BASE ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;display:none;align-items:center;justify-content:center;}
+.modal-overlay.active{display:flex;}
+.modal-box{background:#fff;border:1px solid var(--border);border-radius:12px;padding:24px;max-width:640px;width:90%;max-height:80vh;overflow-y:auto;position:relative;box-shadow:var(--shadow-md);}
+.modal-title{font-size:16px;font-weight:700;color:var(--text-main);margin-bottom:16px;}
+.modal-close-x{position:absolute;top:14px;right:16px;background:transparent;border:none;font-size:20px;color:var(--text-muted);cursor:pointer;line-height:1;}
+.modal-close-x:hover{color:var(--text-main);}
+.modal-footer{display:flex;justify-content:center;margin-top:16px;}
+.btn-modal-close{background:transparent;border:1px solid var(--border);color:var(--text-sub);padding:7px 20px;border-radius:6px;cursor:pointer;font-size:13px;transition:all 0.15s;}
+.btn-modal-close:hover{background:var(--bg-panel);border-color:var(--accent);}
+/* ── TABS ── */
+.tab-header{display:flex;gap:2px;border-bottom:1px solid var(--border);margin-bottom:16px;}
+.tab-btn{background:var(--bg-panel);color:var(--text-sub);border:none;padding:8px 14px;font-size:13px;cursor:pointer;border-radius:6px 6px 0 0;transition:all 0.15s;}
+.tab-btn.active{background:var(--accent);color:#fff;}
+.tab-content{display:none;}
+.tab-content.active{display:block;}
+/* ── FORM INSIDE MODAL ── */
+.modal-form-group{margin-bottom:14px;}
+.modal-label{font-size:12px;font-weight:600;color:var(--text-sub);display:block;margin-bottom:4px;}
+.modal-input{width:100%;border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:13px;outline:none;transition:border-color 0.15s;}
+.modal-input:focus{border-color:var(--border-focus);box-shadow:0 0 0 3px var(--accent-glow);}
+.btn-primary{background:linear-gradient(135deg,#6db33f,#4a8a28);color:#fff;border:none;border-radius:8px;padding:8px 18px;font-size:13px;font-weight:700;cursor:pointer;transition:all 0.15s;}
+.btn-primary:hover{opacity:0.9;}
+.btn-outline{background:transparent;border:1px solid var(--accent);color:var(--accent-dark);border-radius:8px;padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.15s;}
+.btn-outline:hover{background:var(--accent-light);}
+.btn-danger{background:transparent;border:1px solid #c0392b;color:#c0392b;border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer;transition:all 0.15s;}
+.btn-danger:hover{background:#fdf0ee;}
+/* ── PREVIEW SECTIONS ── */
+.preview-section{margin-bottom:14px;}
+.preview-section-title{color:var(--accent);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;border-bottom:1px solid var(--border);padding-bottom:4px;margin-bottom:6px;}
+.preview-content{background:var(--bg-panel);border:1px solid var(--border);border-radius:6px;padding:10px 14px;font-size:13px;white-space:pre-wrap;word-break:break-word;max-height:180px;overflow-y:auto;}
+/* ── USERS TABLE ── */
+.users-table{width:100%;border-collapse:collapse;font-size:13px;}
+.users-table th{background:var(--accent-light);color:var(--accent-dark);padding:8px 10px;border:1px solid var(--border);text-align:left;font-size:12px;}
+.users-table td{padding:7px 10px;border:1px solid var(--border);vertical-align:middle;}
+.users-table tr:hover td{background:var(--bg-panel);}
+.sk-cell{display:flex;align-items:center;gap:4px;flex-wrap:nowrap;}
+.btn-sk-toggle{border:1px solid var(--accent);color:var(--accent-dark);background:transparent;border-radius:4px;padding:2px 7px;font-size:11px;cursor:pointer;transition:all 0.15s;white-space:nowrap;}
+.btn-sk-toggle:hover{background:var(--accent-light);}
+.btn-sk-copy{background:transparent;border:1px solid var(--border);border-radius:4px;padding:2px 6px;font-size:11px;cursor:pointer;opacity:0.3;pointer-events:none;transition:all 0.15s;}
+.btn-sk-copy.active{opacity:1;pointer-events:auto;border-color:var(--accent);color:var(--accent-dark);}
+.btn-sk-copy.active:hover{background:var(--accent-light);}
+.btn-send-key{border:1px solid var(--accent);color:var(--accent-dark);background:transparent;border-radius:6px;padding:4px 8px;font-size:12px;cursor:pointer;white-space:nowrap;transition:all 0.15s;}
+.btn-send-key:hover{background:var(--accent-light);}
+.btn-reset-user{border:1px solid var(--border);color:var(--text-sub);background:transparent;border-radius:6px;padding:4px 8px;font-size:12px;cursor:pointer;transition:all 0.15s;}
+.btn-reset-user:hover{background:var(--bg-panel);}
+.status-changed{color:var(--accent-dark);font-size:12px;}
+.status-unchanged{color:#e67e22;font-size:12px;}
+/* ── FILTER TOGGLE ── */
+.toggle-wrap{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+.toggle-switch{position:relative;width:44px;height:24px;}
+.toggle-switch input{opacity:0;width:0;height:0;}
+.toggle-slider{position:absolute;cursor:pointer;inset:0;background:#ccc;border-radius:24px;transition:0.3s;}
+.toggle-slider:before{position:absolute;content:'';height:18px;width:18px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:0.3s;}
+.toggle-switch input:checked+.toggle-slider{background:var(--accent);}
+.toggle-switch input:checked+.toggle-slider:before{transform:translateX(20px);}
+/* ── CUSTOM RULES TABLE ── */
+.rules-table{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:8px;}
+.rules-table th{background:var(--bg-panel);padding:6px 8px;border:1px solid var(--border);text-align:left;}
+.rules-table td{padding:5px 8px;border:1px solid var(--border);}
+.allowlist-tag{display:inline-flex;align-items:center;gap:4px;background:var(--accent-light);border:1px solid var(--accent);border-radius:16px;padding:2px 10px;font-size:12px;color:var(--accent-dark);margin:2px;}
+.allowlist-tag button{background:none;border:none;cursor:pointer;font-size:12px;color:var(--accent-dark);padding:0;line-height:1;}
+/* ── TOAST ── */
+#toast-container{position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px;max-width:360px;}
+.toast{background:#fff;border-radius:8px;padding:12px 16px;font-size:13px;box-shadow:0 4px 20px rgba(0,0,0,0.12);animation:slideIn 0.2s ease;border-left:4px solid var(--accent);}
+.toast.warn{border-left-color:#e67e22;}
+.toast.error{border-left-color:#c0392b;}
+@keyframes slideIn{from{transform:translateX(30px);opacity:0;}to{transform:translateX(0);opacity:1;}}
+/* ── NEW PASSWORD MODAL ── */
+#new-password-modal .modal-box{max-width:400px;}
+/* ── RESPONSIVE ── */
+@media(max-width:768px){
+  #main-container{flex-direction:column;}
+  #request-panel,#response-panel{width:100%!important;}
+  #panel-divider{display:none;}
+  #response-panel{border-top:1px solid var(--border);}
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header id="header">
+  <div id="header-left">
+    <span id="logo-icon">🌿</span>
+    <span id="logo-text" data-i18n="header.title">캡틴 FLOW</span>
+    <span id="header-badge" data-i18n="header.badge">AI MANA</span>
+  </div>
+  <div id="header-spacer"></div>
+  <div id="header-right">
+    <span id="model-badge"></span>
+    <span id="server-status"><span id="server-dot"></span><span id="server-status-text" data-i18n="header.server_connected">서버 연결됨</span></span>
+    <select id="lang-select" title="Language">
+      <option value="ko">🇰🇷 한국어</option>
+      <option value="en">🇺🇸 English</option>
+      <option value="ja">🇯🇵 日本語</option>
+      <option value="zh-CN">🇨🇳 简体中文</option>
+      <option value="zh-TW">🇹🇼 繁體中文</option>
+      <option value="zh-HK">🇭🇰 繁體中文</option>
+    </select>
+    <button class="header-btn" id="btn-settings" style="display:none" data-i18n="header.settings">설정 관리</button>
+    <button class="header-btn" id="btn-login" data-i18n="header.login">로그인</button>
+    <button class="header-btn" id="btn-logout" style="display:none" data-i18n="header.logout">로그아웃</button>
+  </div>
+</header>
+
+<!-- WELCOME -->
+<div id="welcome-screen">
+  <div id="welcome-main" data-i18n="welcome.main">팀원과 소통 및 협업을 위한 공간 입니다!</div>
+  <div id="welcome-sub" data-i18n="welcome.sub">로그인 후 이용하실 수 있습니다.</div>
+</div>
+
+<!-- MAIN PANELS -->
+<div id="main-container">
+  <!-- REQUEST PANEL -->
+  <div class="panel" id="request-panel">
+    <div class="panel-header"><span class="panel-title" data-i18n="panel.request">REQUEST</span></div>
+    <div id="request-body">
+      <div class="form-group">
+        <label class="form-label" data-i18n="label.ai_model">AI 모델 선택</label>
+        <select id="ai-model-select">
+          <option value="Claude Sonnet 4.6">Claude Sonnet 4.6</option>
+          <option value="Claude Opus 4.6">Claude Opus 4.6</option>
+          <option value="Claude Sonnet (2025-05-14)">Claude Sonnet (2025-05-14)</option>
+          <option value="Claude Haiku 4.5">Claude Haiku 4.5</option>
+          <option value="GPT-5.2 (OpenAI)">GPT-5.2 (OpenAI)</option>
+          <option value="GPT-5-mini (OpenAI)">GPT-5-mini (OpenAI)</option>
+          <option value="Gemini 2.5 Flash (Google)">Gemini 2.5 Flash (Google)</option>
+          <option value="Gemini 2.5 Pro (Google)">Gemini 2.5 Pro (Google)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label" data-i18n="label.question_type">지시 유형 선택</label>
+        <select id="question-type">
+          <option value="direct" data-i18n="qtype.direct">직접 입력</option>
+          <option value="code_review" data-i18n="qtype.code_review">코드 리뷰</option>
+          <option value="code_gen" data-i18n="qtype.code_gen">코드 생성</option>
+          <option value="error_fix" data-i18n="qtype.error_fix">오류 해결</option>
+          <option value="refactor" data-i18n="qtype.refactor">리팩토링</option>
+          <option value="unit_test" data-i18n="qtype.unit_test">단위 테스트</option>
+          <option value="db_design" data-i18n="qtype.db_design">DB 설계</option>
+          <option value="api_design" data-i18n="qtype.api_design">API 설계</option>
+          <option value="explain" data-i18n="qtype.explain">개념 설명</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label" data-i18n="label.tech_stack">기술 스택</label>
+        <select id="tech-stack">
+          <option data-i18n="stack.none">지정 안 함</option>
+          <option>Python / FastAPI</option>
+          <option>Java / Spring Boot</option>
+          <option>JavaScript / Node.js</option>
+          <option>SQL / PostgreSQL</option>
+          <option>SQL / MySQL</option>
+          <option>HTML / CSS / JS</option>
+          <option>React / Vue.js</option>
+          <option>Docker / K8s</option>
+          <option>Git / CI-CD</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label" data-i18n="label.response_format">응답 형식 선택</label>
+        <select id="response-format">
+          <option data-i18n="rfmt.default">기본 (마크다운)</option>
+          <option data-i18n="rfmt.code">코드 위주</option>
+          <option data-i18n="rfmt.step">단계별 설명</option>
+          <option data-i18n="rfmt.brief">간결하게</option>
+          <option data-i18n="rfmt.detail">상세하게</option>
+          <option data-i18n="rfmt.table">표/비교 형식</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label" data-i18n="label.response_language">응답 언어 선택</label>
+        <select id="response-language">
+          <option data-i18n="rlang.auto">자동 (AI 판단)</option>
+          <option data-i18n="rlang.ko">한국어</option>
+          <option data-i18n="rlang.en">영어</option>
+          <option data-i18n="rlang.ja">일본어</option>
+          <option data-i18n="rlang.zh_cn">중국어 (간체)</option>
+          <option data-i18n="rlang.zh_tw">중국어 (번체-대만)</option>
+          <option data-i18n="rlang.zh_hk">중국어 (번체-홍콩)</option>
+        </select>
+      </div>
+      <div class="form-group" style="flex:1">
+        <label class="form-label" data-i18n="label.request_text">지시 사항 입력</label>
+        <textarea id="request-text" data-i18n-placeholder="placeholder.request_text" placeholder="지시 유형 선택 후 내용을 수정하거나 직접 입력하세요." style="min-height:150px;flex:1;"></textarea>
+      </div>
+    </div>
+    <div id="request-footer">
+      <button id="btn-send" data-i18n="btn.send">전송</button>
+      <button id="btn-preview" data-i18n="btn.preview">미리보기</button>
+      <button id="btn-reset" data-i18n="btn.reset">초기화</button>
+    </div>
+  </div>
+
+  <!-- DIVIDER -->
+  <div id="panel-divider"></div>
+
+  <!-- RESPONSE PANEL -->
+  <div class="panel" id="response-panel">
+    <div class="panel-header"><span class="panel-title" data-i18n="panel.response">RESPONSE</span></div>
+    <div id="response-body">
+      <div id="response-wrap" class="response-wrap md-wrap"></div>
+      <div id="scroll-btns">
+        <button class="scroll-btn" id="btn-scroll-top" title="Top">▲</button>
+        <button class="scroll-btn" id="btn-scroll-bottom" title="Bottom">▼</button>
+      </div>
+    </div>
+    <div id="response-footer">
+      <span id="token-counter" data-i18n-prefix="token.counter">예상 토큰: <span id="token-count-val">0</span></span>
+      <span id="response-time"></span>
+      <div id="response-footer-spacer"></div>
+      <button id="btn-copy-response" data-i18n="btn.copy">복사</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div id="toast-container"></div>
+
+<!-- LOGIN MODAL -->
+<div class="modal-overlay" id="login-modal">
+  <div class="modal-box" style="max-width:380px;">
+    <button class="modal-close-x" id="login-modal-close">×</button>
+    <div class="modal-title" data-i18n="login.title">로그인</div>
+    <div class="modal-form-group">
+      <label class="modal-label" data-i18n="login.username">아이디</label>
+      <input class="modal-input" id="login-username" type="text" autocomplete="username">
+    </div>
+    <div class="modal-form-group">
+      <label class="modal-label" data-i18n="login.password">암호</label>
+      <input class="modal-input" id="login-password" type="password" autocomplete="current-password">
+    </div>
+    <div style="margin-top:16px;">
+      <button class="btn-primary" id="login-submit" style="width:100%" data-i18n="login.submit">로그인</button>
+    </div>
+  </div>
+</div>
+
+<!-- NEW PASSWORD MODAL -->
+<div class="modal-overlay" id="new-password-modal">
+  <div class="modal-box" style="max-width:400px;">
+    <div class="modal-title" data-i18n="newpw.title">새 암호 설정</div>
+    <p style="font-size:13px;color:var(--text-sub);margin-bottom:14px;" data-i18n="newpw.desc">최초 로그인입니다. 새 암호를 설정해주세요.</p>
+    <div class="modal-form-group">
+      <label class="modal-label" data-i18n="newpw.new">새 암호</label>
+      <input class="modal-input" id="newpw-input" type="password">
+    </div>
+    <div class="modal-form-group">
+      <label class="modal-label" data-i18n="newpw.confirm">새 암호 확인</label>
+      <input class="modal-input" id="newpw-confirm" type="password">
+    </div>
+    <div style="margin-top:16px;">
+      <button class="btn-primary" id="newpw-submit" style="width:100%" data-i18n="newpw.submit">설정 완료</button>
+    </div>
+  </div>
+</div>
+
+<!-- PREVIEW MODAL -->
+<div class="modal-overlay" id="preview-modal">
+  <div class="modal-box">
+    <button class="modal-close-x" id="preview-modal-close-x">×</button>
+    <div class="modal-title" data-i18n="preview.title">전송 전 프롬프트 미리보기</div>
+    <div class="preview-section">
+      <div class="preview-section-title" data-i18n="preview.system">시스템 프롬프트</div>
+      <div class="preview-content" id="preview-system-content"></div>
+    </div>
+    <div class="preview-section">
+      <div class="preview-section-title" data-i18n="preview.user">사용자 프롬프트</div>
+      <div class="preview-content" id="preview-user-content"></div>
+    </div>
+    <div class="preview-section" id="preview-filter-section">
+      <div class="preview-section-title" data-i18n="preview.filter">민감정보 검출 결과</div>
+      <div class="preview-content" id="preview-filter-content"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-modal-close" id="preview-modal-close" data-i18n="btn.close">닫기</button>
+    </div>
+  </div>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div class="modal-overlay" id="settings-modal">
+  <div class="modal-box" style="max-width:700px;width:95%;">
+    <button class="modal-close-x" id="settings-modal-close-x">×</button>
+    <div class="modal-title" data-i18n="settings.title">설정 관리</div>
+    <div class="tab-header" id="settings-tabs">
+      <button class="tab-btn active" data-tab="tab-password" data-i18n="settings.tab.password">관리자 암호 변경</button>
+      <button class="tab-btn" data-tab="tab-apikey" data-i18n="settings.tab.apikey">API KEY 관리</button>
+      <button class="tab-btn" data-tab="tab-users" data-i18n="settings.tab.users">사용자 관리</button>
+      <button class="tab-btn" data-tab="tab-filter" data-i18n="settings.tab.filter">민감정보 필터</button>
+    </div>
+
+    <!-- TAB 1: Password -->
+    <div class="tab-content active" id="tab-password">
+      <div class="modal-form-group">
+        <label class="modal-label" data-i18n="settings.pw.current">현재 암호</label>
+        <input class="modal-input" id="pw-current" type="password">
+      </div>
+      <div class="modal-form-group">
+        <label class="modal-label" data-i18n="settings.pw.new">새 암호 (8자 이상)</label>
+        <input class="modal-input" id="pw-new" type="password">
+      </div>
+      <div class="modal-form-group">
+        <label class="modal-label" data-i18n="settings.pw.confirm">새 암호 확인</label>
+        <input class="modal-input" id="pw-confirm" type="password">
+      </div>
+      <button class="btn-primary" id="btn-change-password" data-i18n="settings.pw.btn">변경</button>
+    </div>
+
+    <!-- TAB 2: API Keys -->
+    <div class="tab-content" id="tab-apikey">
+      <div class="modal-form-group">
+        <label class="modal-label">Claude API Key</label>
+        <input class="modal-input" id="apikey-anthropic" type="text" placeholder="sk-ant-...">
+      </div>
+      <div class="modal-form-group">
+        <label class="modal-label">OpenAI API Key</label>
+        <input class="modal-input" id="apikey-openai" type="text" placeholder="sk-...">
+      </div>
+      <div class="modal-form-group">
+        <label class="modal-label">Gemini API Key</label>
+        <input class="modal-input" id="apikey-gemini" type="text" placeholder="AIza...">
+      </div>
+      <button class="btn-primary" id="btn-save-apikeys" data-i18n="btn.save">저장</button>
+    </div>
+
+    <!-- TAB 3: Users -->
+    <div class="tab-content" id="tab-users">
+      <div style="overflow-x:auto;margin-bottom:14px;">
+        <table class="users-table" id="users-table">
+          <thead>
+            <tr>
+              <th data-i18n="users.email">이메일</th>
+              <th data-i18n="users.security_key">보안키</th>
+              <th data-i18n="users.status">암호 변경 여부</th>
+              <th>액션</th>
+            </tr>
+          </thead>
+          <tbody id="users-tbody"></tbody>
+        </table>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;margin-top:8px;">
+        <input class="modal-input" id="new-user-email" type="email" placeholder="user@example.com" style="flex:1;">
+        <button class="btn-primary" id="btn-add-user" data-i18n="users.add">사용자 추가</button>
+      </div>
+    </div>
+
+    <!-- TAB 4: Filter -->
+    <div class="tab-content" id="tab-filter">
+      <div class="toggle-wrap">
+        <label class="toggle-switch">
+          <input type="checkbox" id="filter-toggle">
+          <span class="toggle-slider"></span>
+        </label>
+        <span id="filter-toggle-label" style="font-size:13px;font-weight:600;color:var(--text-sub);">OFF</span>
+      </div>
+      <div class="modal-form-group" id="filter-level-group">
+        <label class="modal-label" data-i18n="filter.level_label">필터 레벨</label>
+        <select class="modal-input" id="filter-level">
+          <option value="1" data-i18n="filter.level1">레벨1 — 경고만</option>
+          <option value="2" data-i18n="filter.level2">레벨2 — 자동 마스킹</option>
+          <option value="3" data-i18n="filter.level3">레벨3 — 강제 차단</option>
+        </select>
+      </div>
+      <hr style="border:none;border-top:1px solid var(--border);margin:10px 0;">
+      <div style="font-size:12px;font-weight:700;color:var(--text-sub);margin-bottom:6px;" data-i18n="filter.custom_rules">커스텀 룰</div>
+      <table class="rules-table" id="custom-rules-table">
+        <thead><tr><th data-i18n="filter.rule_name">룰명</th><th data-i18n="filter.pattern">패턴</th><th data-i18n="filter.action">액션</th><th></th></tr></thead>
+        <tbody id="custom-rules-tbody"></tbody>
+      </table>
+      <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;">
+        <input class="modal-input" id="rule-name" placeholder="룰명" style="flex:1;min-width:80px;">
+        <input class="modal-input" id="rule-pattern" placeholder="정규식" style="flex:2;min-width:100px;">
+        <select class="modal-input" id="rule-action" style="width:100px;flex-shrink:0;">
+          <option value="warn" data-i18n="filter.action.warn">경고</option>
+          <option value="mask" data-i18n="filter.action.mask">마스킹</option>
+          <option value="block" data-i18n="filter.action.block">차단</option>
+        </select>
+        <button class="btn-outline" id="btn-add-rule" data-i18n="btn.add">추가</button>
+      </div>
+      <hr style="border:none;border-top:1px solid var(--border);margin:10px 0;">
+      <div style="font-size:12px;font-weight:700;color:var(--text-sub);margin-bottom:6px;" data-i18n="filter.allowlist">예외(allowlist) 도메인</div>
+      <div id="allowlist-tags" style="margin-bottom:8px;min-height:28px;"></div>
+      <div style="display:flex;gap:6px;">
+        <input class="modal-input" id="allowlist-input" placeholder="localhost" style="flex:1;">
+        <button class="btn-outline" id="btn-add-allowlist" data-i18n="btn.add">추가</button>
+      </div>
+      <div style="margin-top:14px;">
+        <button class="btn-primary" id="btn-save-filter" data-i18n="btn.save">저장</button>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-modal-close" id="settings-modal-close" data-i18n="btn.close">닫기</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════
+// I18N DICTIONARIES
+// ═══════════════════════════════════════════════════
+const I18N = {
+  ko: {
+    "header.title":"캡틴 FLOW","header.badge":"AI MANA","header.server_connected":"서버 연결됨",
+    "header.login":"로그인","header.logout":"로그아웃","header.settings":"설정 관리",
+    "login.title":"로그인","login.username":"아이디","login.password":"암호","login.submit":"로그인",
+    "login.error":"아이디 또는 암호가 올바르지 않습니다.",
+    "welcome.main":"팀원과 소통 및 협업을 위한 공간 입니다!","welcome.sub":"로그인 후 이용하실 수 있습니다.",
+    "panel.request":"REQUEST","panel.response":"RESPONSE",
+    "label.ai_model":"AI 모델 선택","label.question_type":"지시 유형 선택","label.tech_stack":"기술 스택",
+    "label.response_format":"응답 형식 선택","label.response_language":"응답 언어 선택","label.request_text":"지시 사항 입력",
+    "placeholder.request_text":"지시 유형 선택 후 내용을 수정하거나 직접 입력하세요.",
+    "btn.send":"전송","btn.preview":"미리보기","btn.reset":"초기화","btn.copy":"복사","btn.close":"닫기","btn.save":"저장","btn.add":"추가",
+    "settings.title":"설정 관리","settings.tab.password":"관리자 암호 변경","settings.tab.apikey":"API KEY 관리",
+    "settings.tab.users":"사용자 관리","settings.tab.filter":"민감정보 필터",
+    "settings.pw.current":"현재 암호","settings.pw.new":"새 암호 (8자 이상)","settings.pw.confirm":"새 암호 확인","settings.pw.btn":"변경",
+    "users.add":"사용자 추가","users.send_key":"보안키 발송","users.reset":"초기화","users.delete":"삭제",
+    "users.email":"이메일","users.security_key":"보안키","users.security_key.show":"확인","users.security_key.hide":"숨김",
+    "users.security_key.copy":"복사","users.security_key.copied":"보안키가 복사되었습니다.",
+    "users.status":"암호 변경 여부","users.status.changed":"변경완료","users.status.unchanged":"미변경",
+    "filter.toggle_on":"ON","filter.toggle_off":"OFF","filter.level_label":"필터 레벨",
+    "filter.level1":"레벨1 — 경고만","filter.level2":"레벨2 — 자동 마스킹","filter.level3":"레벨3 — 강제 차단",
+    "filter.custom_rules":"커스텀 룰","filter.allowlist":"예외(allowlist) 도메인",
+    "filter.rule_name":"룰명","filter.pattern":"패턴","filter.action":"액션",
+    "filter.action.warn":"경고","filter.action.mask":"마스킹","filter.action.block":"차단",
+    "newpw.title":"새 암호 설정","newpw.desc":"최초 로그인입니다. 새 암호를 설정해주세요.",
+    "newpw.new":"새 암호","newpw.confirm":"새 암호 확인","newpw.submit":"설정 완료",
+    "preview.title":"전송 전 프롬프트 미리보기","preview.system":"시스템 프롬프트","preview.user":"사용자 프롬프트","preview.filter":"민감정보 검출 결과",
+    "qtype.direct":"직접 입력","qtype.code_review":"코드 리뷰","qtype.code_gen":"코드 생성","qtype.error_fix":"오류 해결",
+    "qtype.refactor":"리팩토링","qtype.unit_test":"단위 테스트","qtype.db_design":"DB 설계","qtype.api_design":"API 설계","qtype.explain":"개념 설명",
+    "stack.none":"지정 안 함",
+    "rfmt.default":"기본 (마크다운)","rfmt.code":"코드 위주","rfmt.step":"단계별 설명","rfmt.brief":"간결하게","rfmt.detail":"상세하게","rfmt.table":"표/비교 형식",
+    "rlang.auto":"자동 (AI 판단)","rlang.ko":"한국어","rlang.en":"영어","rlang.ja":"일본어","rlang.zh_cn":"중국어 (간체)","rlang.zh_tw":"중국어 (번체-대만)","rlang.zh_hk":"중국어 (번체-홍콩)",
+    "instruction_template.code_review":"아래 코드를 리뷰해줘. 개선사항과 버그 여부를 알려줘:\n\n[코드 붙여넣기]",
+    "instruction_template.code_gen":"아래 요구사항에 맞는 코드를 작성해줘:\n\n[요구사항 작성]",
+    "instruction_template.error_fix":"아래 오류가 발생했어. 원인과 해결 방법을 알려줘:\n\n[오류 메시지 붙여넣기]",
+    "instruction_template.refactor":"아래 코드를 리팩토링해줘. 가독성과 성능을 개선해줘:\n\n[코드 붙여넣기]",
+    "instruction_template.unit_test":"아래 코드에 대한 단위 테스트 코드를 작성해줘:\n\n[코드 붙여넣기]",
+    "instruction_template.db_design":"아래 요구사항에 맞는 DB 테이블 설계 및 SQL을 작성해줘:\n\n[요구사항 작성]",
+    "instruction_template.api_design":"아래 기능에 대한 REST API 설계를 해줘 (엔드포인트, 요청/응답 포함):\n\n[기능 설명]",
+    "instruction_template.explain":"아래 기술/개념에 대해 쉽게 설명해줘:\n\n[개념 또는 키워드]",
+    "instruction_template.direct":"",
+  },
+  en: {
+    "header.title":"Captain FLOW","header.badge":"AI MANA","header.server_connected":"Server Connected",
+    "header.login":"Login","header.logout":"Logout","header.settings":"Settings",
+    "login.title":"Login","login.username":"Username","login.password":"Password","login.submit":"Login",
+    "login.error":"Invalid username or password.",
+    "welcome.main":"A space for team communication and collaboration!","welcome.sub":"Please log in to continue.",
+    "panel.request":"REQUEST","panel.response":"RESPONSE",
+    "label.ai_model":"Select AI Model","label.question_type":"Select Task Type","label.tech_stack":"Tech Stack",
+    "label.response_format":"Response Format","label.response_language":"Response Language","label.request_text":"Instructions",
+    "placeholder.request_text":"Select a task type or type your instructions directly.",
+    "btn.send":"Send","btn.preview":"Preview","btn.reset":"Reset","btn.copy":"Copy","btn.close":"Close","btn.save":"Save","btn.add":"Add",
+    "settings.title":"Settings","settings.tab.password":"Change Admin Password","settings.tab.apikey":"API KEY Management",
+    "settings.tab.users":"User Management","settings.tab.filter":"Sensitive Data Filter",
+    "settings.pw.current":"Current Password","settings.pw.new":"New Password (8+ chars)","settings.pw.confirm":"Confirm New Password","settings.pw.btn":"Change",
+    "users.add":"Add User","users.send_key":"Send Key","users.reset":"Reset","users.delete":"Delete",
+    "users.email":"Email","users.security_key":"Security Key","users.security_key.show":"Show","users.security_key.hide":"Hide",
+    "users.security_key.copy":"Copy","users.security_key.copied":"Security key copied.",
+    "users.status":"Password Status","users.status.changed":"Changed","users.status.unchanged":"Not Changed",
+    "filter.toggle_on":"ON","filter.toggle_off":"OFF","filter.level_label":"Filter Level",
+    "filter.level1":"Level 1 — Warn Only","filter.level2":"Level 2 — Auto Mask","filter.level3":"Level 3 — Block",
+    "filter.custom_rules":"Custom Rules","filter.allowlist":"Allowlist Domains",
+    "filter.rule_name":"Rule Name","filter.pattern":"Pattern","filter.action":"Action",
+    "filter.action.warn":"Warn","filter.action.mask":"Mask","filter.action.block":"Block",
+    "newpw.title":"Set New Password","newpw.desc":"First login. Please set your password.",
+    "newpw.new":"New Password","newpw.confirm":"Confirm Password","newpw.submit":"Set Password",
+    "preview.title":"Prompt Preview","preview.system":"System Prompt","preview.user":"User Prompt","preview.filter":"Sensitive Data Detection",
+    "qtype.direct":"Direct Input","qtype.code_review":"Code Review","qtype.code_gen":"Code Gen","qtype.error_fix":"Error Fix",
+    "qtype.refactor":"Refactor","qtype.unit_test":"Unit Test","qtype.db_design":"DB Design","qtype.api_design":"API Design","qtype.explain":"Explain",
+    "stack.none":"Not Specified",
+    "rfmt.default":"Default (Markdown)","rfmt.code":"Code Focused","rfmt.step":"Step by Step","rfmt.brief":"Concise","rfmt.detail":"Detailed","rfmt.table":"Table/Compare",
+    "rlang.auto":"Auto (AI decides)","rlang.ko":"Korean","rlang.en":"English","rlang.ja":"Japanese","rlang.zh_cn":"Chinese (Simplified)","rlang.zh_tw":"Chinese (Traditional-TW)","rlang.zh_hk":"Chinese (Traditional-HK)",
+    "instruction_template.code_review":"Please review the code below. Point out any improvements and potential bugs:\n\n[Paste code here]",
+    "instruction_template.code_gen":"Please write code that meets the following requirements:\n\n[Describe requirements]",
+    "instruction_template.error_fix":"I encountered the error below. Please explain the cause and how to fix it:\n\n[Paste error message]",
+    "instruction_template.refactor":"Please refactor the code below to improve readability and performance:\n\n[Paste code here]",
+    "instruction_template.unit_test":"Please write unit tests for the code below:\n\n[Paste code here]",
+    "instruction_template.db_design":"Please design a DB table and write SQL for the following requirements:\n\n[Describe requirements]",
+    "instruction_template.api_design":"Please design a REST API for the feature below (include endpoints, request/response):\n\n[Describe feature]",
+    "instruction_template.explain":"Please explain the following technology or concept in simple terms:\n\n[Concept or keyword]",
+    "instruction_template.direct":"",
+  },
+  ja: {
+    "header.title":"キャプテン FLOW","header.badge":"AI MANA","header.server_connected":"サーバー接続済み",
+    "header.login":"ログイン","header.logout":"ログアウト","header.settings":"設定管理",
+    "login.title":"ログイン","login.username":"ユーザー名","login.password":"パスワード","login.submit":"ログイン",
+    "login.error":"ユーザー名またはパスワードが正しくありません。",
+    "welcome.main":"チームのコミュニケーションと協業のためのスペースです！","welcome.sub":"ログイン後にご利用いただけます。",
+    "panel.request":"REQUEST","panel.response":"RESPONSE",
+    "label.ai_model":"AIモデル選択","label.question_type":"指示タイプ選択","label.tech_stack":"技術スタック",
+    "label.response_format":"応答形式選択","label.response_language":"応答言語選択","label.request_text":"指示内容入力",
+    "placeholder.request_text":"指示タイプを選択するか、直接入力してください。",
+    "btn.send":"送信","btn.preview":"プレビュー","btn.reset":"リセット","btn.copy":"コピー","btn.close":"閉じる","btn.save":"保存","btn.add":"追加",
+    "settings.title":"設定管理","settings.tab.password":"管理者パスワード変更","settings.tab.apikey":"API KEY管理",
+    "settings.tab.users":"ユーザー管理","settings.tab.filter":"機密情報フィルター",
+    "settings.pw.current":"現在のパスワード","settings.pw.new":"新しいパスワード (8文字以上)","settings.pw.confirm":"新しいパスワード確認","settings.pw.btn":"変更",
+    "users.add":"ユーザー追加","users.send_key":"セキュリティキー送信","users.reset":"リセット","users.delete":"削除",
+    "users.email":"メール","users.security_key":"セキュリティキー","users.security_key.show":"表示","users.security_key.hide":"非表示",
+    "users.security_key.copy":"コピー","users.security_key.copied":"セキュリティキーをコピーしました。",
+    "users.status":"パスワード変更","users.status.changed":"変更済み","users.status.unchanged":"未変更",
+    "filter.toggle_on":"ON","filter.toggle_off":"OFF","filter.level_label":"フィルターレベル",
+    "filter.level1":"レベル1 — 警告のみ","filter.level2":"レベル2 — 自動マスク","filter.level3":"レベル3 — 強制ブロック",
+    "filter.custom_rules":"カスタムルール","filter.allowlist":"許可リストドメイン",
+    "filter.rule_name":"ルール名","filter.pattern":"パターン","filter.action":"アクション",
+    "filter.action.warn":"警告","filter.action.mask":"マスク","filter.action.block":"ブロック",
+    "newpw.title":"新しいパスワード設定","newpw.desc":"初回ログインです。新しいパスワードを設定してください。",
+    "newpw.new":"新しいパスワード","newpw.confirm":"パスワード確認","newpw.submit":"設定完了",
+    "preview.title":"送信前プロンプトプレビュー","preview.system":"システムプロンプト","preview.user":"ユーザープロンプト","preview.filter":"機密情報検出結果",
+    "qtype.direct":"直接入力","qtype.code_review":"コードレビュー","qtype.code_gen":"コード生成","qtype.error_fix":"エラー解決",
+    "qtype.refactor":"リファクタリング","qtype.unit_test":"単体テスト","qtype.db_design":"DB設計","qtype.api_design":"API設計","qtype.explain":"概念説明",
+    "stack.none":"指定なし",
+    "rfmt.default":"デフォルト (Markdown)","rfmt.code":"コード中心","rfmt.step":"ステップバイステップ","rfmt.brief":"簡潔に","rfmt.detail":"詳細に","rfmt.table":"表/比較形式",
+    "rlang.auto":"自動 (AI判断)","rlang.ko":"韓国語","rlang.en":"英語","rlang.ja":"日本語","rlang.zh_cn":"中国語 (簡体)","rlang.zh_tw":"中国語 (繁体-台湾)","rlang.zh_hk":"中国語 (繁体-香港)",
+    "instruction_template.code_review":"以下のコードをレビューしてください。改善点とバグの有無を教えてください:\n\n[コードを貼り付け]",
+    "instruction_template.code_gen":"以下の要件に合ったコードを作成してください:\n\n[要件を記入]",
+    "instruction_template.error_fix":"以下のエラーが発生しました。原因と解決方法を教えてください:\n\n[エラーメッセージを貼り付け]",
+    "instruction_template.refactor":"以下のコードをリファクタリングしてください。可読性とパフォーマンスを改善してください:\n\n[コードを貼り付け]",
+    "instruction_template.unit_test":"以下のコードに対するユニットテストコードを作成してください:\n\n[コードを貼り付け]",
+    "instruction_template.db_design":"以下の要件に合ったDBテーブル設計とSQLを作成してください:\n\n[要件を記入]",
+    "instruction_template.api_design":"以下の機能に対するREST API設計を行ってください（エンドポイント、リクエスト/レスポンス含む）:\n\n[機能説明]",
+    "instruction_template.explain":"以下の技術/概念についてわかりやすく説明してください:\n\n[概念またはキーワード]",
+    "instruction_template.direct":"",
+  },
+  "zh-CN": {
+    "header.title":"船长 FLOW","header.badge":"AI MANA","header.server_connected":"服务器已连接",
+    "header.login":"登录","header.logout":"退出","header.settings":"设置管理",
+    "login.title":"登录","login.username":"用户名","login.password":"密码","login.submit":"登录",
+    "login.error":"用户名或密码不正确。",
+    "welcome.main":"这是团队沟通与协作的空间！","welcome.sub":"请登录后使用。",
+    "panel.request":"REQUEST","panel.response":"RESPONSE",
+    "label.ai_model":"选择AI模型","label.question_type":"选择指令类型","label.tech_stack":"技术栈",
+    "label.response_format":"响应格式","label.response_language":"响应语言","label.request_text":"输入指令",
+    "placeholder.request_text":"选择指令类型或直接输入。",
+    "btn.send":"发送","btn.preview":"预览","btn.reset":"重置","btn.copy":"复制","btn.close":"关闭","btn.save":"保存","btn.add":"添加",
+    "settings.title":"设置管理","settings.tab.password":"修改管理员密码","settings.tab.apikey":"API KEY管理",
+    "settings.tab.users":"用户管理","settings.tab.filter":"敏感信息过滤",
+    "settings.pw.current":"当前密码","settings.pw.new":"新密码 (8位以上)","settings.pw.confirm":"确认新密码","settings.pw.btn":"修改",
+    "users.add":"添加用户","users.send_key":"发送密钥","users.reset":"重置","users.delete":"删除",
+    "users.email":"邮箱","users.security_key":"安全密钥","users.security_key.show":"查看","users.security_key.hide":"隐藏",
+    "users.security_key.copy":"复制","users.security_key.copied":"安全密钥已复制。",
+    "users.status":"密码状态","users.status.changed":"已修改","users.status.unchanged":"未修改",
+    "filter.toggle_on":"ON","filter.toggle_off":"OFF","filter.level_label":"过滤级别",
+    "filter.level1":"级别1 — 仅警告","filter.level2":"级别2 — 自动遮蔽","filter.level3":"级别3 — 强制拦截",
+    "filter.custom_rules":"自定义规则","filter.allowlist":"白名单域名",
+    "filter.rule_name":"规则名","filter.pattern":"模式","filter.action":"动作",
+    "filter.action.warn":"警告","filter.action.mask":"遮蔽","filter.action.block":"拦截",
+    "newpw.title":"设置新密码","newpw.desc":"首次登录，请设置您的密码。",
+    "newpw.new":"新密码","newpw.confirm":"确认密码","newpw.submit":"完成设置",
+    "preview.title":"发送前提示词预览","preview.system":"系统提示词","preview.user":"用户提示词","preview.filter":"敏感信息检测结果",
+    "qtype.direct":"直接输入","qtype.code_review":"代码审查","qtype.code_gen":"代码生成","qtype.error_fix":"错误修复",
+    "qtype.refactor":"代码重构","qtype.unit_test":"单元测试","qtype.db_design":"数据库设计","qtype.api_design":"API设计","qtype.explain":"概念解释",
+    "stack.none":"不指定",
+    "rfmt.default":"默认 (Markdown)","rfmt.code":"代码优先","rfmt.step":"分步说明","rfmt.brief":"简洁","rfmt.detail":"详细","rfmt.table":"表格/比较",
+    "rlang.auto":"自动 (AI判断)","rlang.ko":"韩语","rlang.en":"英语","rlang.ja":"日语","rlang.zh_cn":"中文 (简体)","rlang.zh_tw":"中文 (繁体-台湾)","rlang.zh_hk":"中文 (繁体-香港)",
+    "instruction_template.code_review":"请审查以下代码，指出改进点和潜在的错误:\n\n[粘贴代码]",
+    "instruction_template.code_gen":"请根据以下需求编写代码:\n\n[描述需求]",
+    "instruction_template.error_fix":"出现了以下错误，请说明原因及解决方法:\n\n[粘贴错误信息]",
+    "instruction_template.refactor":"请对以下代码进行重构，提高可读性和性能:\n\n[粘贴代码]",
+    "instruction_template.unit_test":"请为以下代码编写单元测试:\n\n[粘贴代码]",
+    "instruction_template.db_design":"请根据以下需求设计数据库表并编写SQL:\n\n[描述需求]",
+    "instruction_template.api_design":"请为以下功能设计REST API（包括端点、请求/响应）:\n\n[功能描述]",
+    "instruction_template.explain":"请用简单易懂的方式解释以下技术/概念:\n\n[概念或关键词]",
+    "instruction_template.direct":"",
+  },
+  "zh-TW": {
+    "header.title":"船長 FLOW","header.badge":"AI MANA","header.server_connected":"伺服器已連線",
+    "header.login":"登入","header.logout":"登出","header.settings":"設定管理",
+    "login.title":"登入","login.username":"帳號","login.password":"密碼","login.submit":"登入",
+    "login.error":"帳號或密碼不正確。",
+    "welcome.main":"這是團隊溝通與協作的空間！","welcome.sub":"請登入後使用。",
+    "panel.request":"REQUEST","panel.response":"RESPONSE",
+    "label.ai_model":"選擇AI模型","label.question_type":"選擇指令類型","label.tech_stack":"技術棧",
+    "label.response_format":"回應格式","label.response_language":"回應語言","label.request_text":"輸入指令",
+    "placeholder.request_text":"選擇指令類型或直接輸入。",
+    "btn.send":"傳送","btn.preview":"預覽","btn.reset":"重置","btn.copy":"複製","btn.close":"關閉","btn.save":"儲存","btn.add":"新增",
+    "settings.title":"設定管理","settings.tab.password":"修改管理員密碼","settings.tab.apikey":"API KEY管理",
+    "settings.tab.users":"使用者管理","settings.tab.filter":"敏感資訊過濾",
+    "settings.pw.current":"目前密碼","settings.pw.new":"新密碼 (8字以上)","settings.pw.confirm":"確認新密碼","settings.pw.btn":"變更",
+    "users.add":"新增使用者","users.send_key":"發送安全金鑰","users.reset":"重置","users.delete":"刪除",
+    "users.email":"電子郵件","users.security_key":"安全金鑰","users.security_key.show":"查看","users.security_key.hide":"隱藏",
+    "users.security_key.copy":"複製","users.security_key.copied":"安全金鑰已複製。",
+    "users.status":"密碼狀態","users.status.changed":"已變更","users.status.unchanged":"未變更",
+    "filter.toggle_on":"ON","filter.toggle_off":"OFF","filter.level_label":"過濾等級",
+    "filter.level1":"等級1 — 僅警告","filter.level2":"等級2 — 自動遮蔽","filter.level3":"等級3 — 強制封鎖",
+    "filter.custom_rules":"自訂規則","filter.allowlist":"白名單網域",
+    "filter.rule_name":"規則名稱","filter.pattern":"模式","filter.action":"動作",
+    "filter.action.warn":"警告","filter.action.mask":"遮蔽","filter.action.block":"封鎖",
+    "newpw.title":"設定新密碼","newpw.desc":"首次登入，請設定您的密碼。",
+    "newpw.new":"新密碼","newpw.confirm":"確認密碼","newpw.submit":"完成設定",
+    "preview.title":"傳送前提示詞預覽","preview.system":"系統提示詞","preview.user":"使用者提示詞","preview.filter":"敏感資訊檢測結果",
+    "qtype.direct":"直接輸入","qtype.code_review":"程式碼審查","qtype.code_gen":"程式碼生成","qtype.error_fix":"錯誤修復",
+    "qtype.refactor":"程式碼重構","qtype.unit_test":"單元測試","qtype.db_design":"資料庫設計","qtype.api_design":"API設計","qtype.explain":"概念說明",
+    "stack.none":"不指定",
+    "rfmt.default":"預設 (Markdown)","rfmt.code":"程式碼優先","rfmt.step":"逐步說明","rfmt.brief":"簡潔","rfmt.detail":"詳細","rfmt.table":"表格/比較",
+    "rlang.auto":"自動 (AI判斷)","rlang.ko":"韓語","rlang.en":"英語","rlang.ja":"日語","rlang.zh_cn":"中文 (簡體)","rlang.zh_tw":"中文 (繁體-台灣)","rlang.zh_hk":"中文 (繁體-香港)",
+    "instruction_template.code_review":"請審查以下程式碼，指出改進點和潛在錯誤:\n\n[貼上程式碼]",
+    "instruction_template.code_gen":"請根據以下需求編寫程式碼:\n\n[描述需求]",
+    "instruction_template.error_fix":"發生了以下錯誤，請說明原因及解決方法:\n\n[貼上錯誤訊息]",
+    "instruction_template.refactor":"請對以下程式碼進行重構，提高可讀性與效能:\n\n[貼上程式碼]",
+    "instruction_template.unit_test":"請為以下程式碼編寫單元測試:\n\n[貼上程式碼]",
+    "instruction_template.db_design":"請根據以下需求設計資料庫表格並編寫SQL:\n\n[描述需求]",
+    "instruction_template.api_design":"請為以下功能設計REST API（包含端點、請求/回應）:\n\n[功能說明]",
+    "instruction_template.explain":"請以簡單易懂的方式說明以下技術/概念:\n\n[概念或關鍵字]",
+    "instruction_template.direct":"",
+  },
+  "zh-HK": {
+    "header.title":"船長 FLOW","header.badge":"AI MANA","header.server_connected":"伺服器已連接",
+    "header.login":"登入","header.logout":"登出","header.settings":"設定管理",
+    "login.title":"登入","login.username":"帳號","login.password":"密碼","login.submit":"登入",
+    "login.error":"帳號或密碼不正確。",
+    "welcome.main":"這是團隊溝通與協作的空間！","welcome.sub":"請登入後使用。",
+    "panel.request":"REQUEST","panel.response":"RESPONSE",
+    "label.ai_model":"選擇AI模型","label.question_type":"選擇指令類型","label.tech_stack":"技術棧",
+    "label.response_format":"回應格式","label.response_language":"回應語言","label.request_text":"輸入指令",
+    "placeholder.request_text":"選擇指令類型或直接輸入。",
+    "btn.send":"傳送","btn.preview":"預覽","btn.reset":"重置","btn.copy":"複製","btn.close":"關閉","btn.save":"儲存","btn.add":"新增",
+    "settings.title":"設定管理","settings.tab.password":"修改管理員密碼","settings.tab.apikey":"API KEY管理",
+    "settings.tab.users":"用戶管理","settings.tab.filter":"敏感資訊過濾",
+    "settings.pw.current":"目前密碼","settings.pw.new":"新密碼 (8字以上)","settings.pw.confirm":"確認新密碼","settings.pw.btn":"變更",
+    "users.add":"新增用戶","users.send_key":"發送安全密鑰","users.reset":"重置","users.delete":"刪除",
+    "users.email":"電郵","users.security_key":"安全密鑰","users.security_key.show":"查看","users.security_key.hide":"隱藏",
+    "users.security_key.copy":"複製","users.security_key.copied":"安全密鑰已複製。",
+    "users.status":"密碼狀態","users.status.changed":"已變更","users.status.unchanged":"未變更",
+    "filter.toggle_on":"ON","filter.toggle_off":"OFF","filter.level_label":"過濾等級",
+    "filter.level1":"等級1 — 僅警告","filter.level2":"等級2 — 自動遮蔽","filter.level3":"等級3 — 強制封鎖",
+    "filter.custom_rules":"自訂規則","filter.allowlist":"白名單網域",
+    "filter.rule_name":"規則名稱","filter.pattern":"模式","filter.action":"動作",
+    "filter.action.warn":"警告","filter.action.mask":"遮蔽","filter.action.block":"封鎖",
+    "newpw.title":"設定新密碼","newpw.desc":"首次登入，請設定您的密碼。",
+    "newpw.new":"新密碼","newpw.confirm":"確認密碼","newpw.submit":"完成設定",
+    "preview.title":"傳送前提示詞預覽","preview.system":"系統提示詞","preview.user":"用戶提示詞","preview.filter":"敏感資訊檢測結果",
+    "qtype.direct":"直接輸入","qtype.code_review":"程式碼審閱","qtype.code_gen":"程式碼生成","qtype.error_fix":"錯誤修復",
+    "qtype.refactor":"程式碼重構","qtype.unit_test":"單元測試","qtype.db_design":"數據庫設計","qtype.api_design":"API設計","qtype.explain":"概念解釋",
+    "stack.none":"不指定",
+    "rfmt.default":"預設 (Markdown)","rfmt.code":"程式碼優先","rfmt.step":"逐步說明","rfmt.brief":"簡潔","rfmt.detail":"詳細","rfmt.table":"表格/比較",
+    "rlang.auto":"自動 (AI判斷)","rlang.ko":"韓語","rlang.en":"英語","rlang.ja":"日語","rlang.zh_cn":"中文 (簡體)","rlang.zh_tw":"中文 (繁體-台灣)","rlang.zh_hk":"中文 (繁體-香港)",
+    "instruction_template.code_review":"請審閱以下程式碼，指出改進點及潛在問題:\n\n[貼上程式碼]",
+    "instruction_template.code_gen":"請根據以下要求編寫程式碼:\n\n[描述要求]",
+    "instruction_template.error_fix":"出現了以下錯誤，請說明原因及解決方法:\n\n[貼上錯誤訊息]",
+    "instruction_template.refactor":"請重構以下程式碼，提升可讀性及效能:\n\n[貼上程式碼]",
+    "instruction_template.unit_test":"請為以下程式碼編寫單元測試:\n\n[貼上程式碼]",
+    "instruction_template.db_design":"請根據以下要求設計數據庫表及SQL:\n\n[描述要求]",
+    "instruction_template.api_design":"請為以下功能設計REST API（包括端點、請求/回應）:\n\n[功能說明]",
+    "instruction_template.explain":"請用簡單易明的方式解釋以下技術/概念:\n\n[概念或關鍵詞]",
+    "instruction_template.direct":"",
+  },
+};
+
+// ═══════════════════════════════════════════════════
+// SENSITIVE INFO FILTER (CLIENT-SIDE JS)
+// ═══════════════════════════════════════════════════
+const CLIENT_RULES = [
+  {name:"ANTHROPIC_KEY", pattern:/sk-ant-[A-Za-z0-9\-]{20,}/g, action:"block", mask:m=>m.slice(0,10)+"****...****"},
+  {name:"OPENAI_KEY", pattern:/sk-[A-Za-z0-9]{20,}/g, action:"block", mask:()=>"sk-****...****"},
+  {name:"GEMINI_KEY", pattern:/AIza[A-Za-z0-9\-_]{35}/g, action:"block", mask:()=>"AIza****...****"},
+  {name:"BEARER_TOKEN", pattern:/Bearer\s+[A-Za-z0-9\-_.~+\/]+=*/g, action:"mask", mask:()=>"Bearer [REDACTED]"},
+  {name:"JWT_TOKEN", pattern:/eyJ[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]*/g, action:"mask", mask:()=>"[JWT_REDACTED]"},
+  {name:"PRIVATE_KEY", pattern:/-----BEGIN [A-Z ]*PRIVATE KEY-----/g, action:"block", mask:()=>"[PRIVATE_KEY_REDACTED]"},
+  {name:"DB_CONN_STRING", pattern:/(mysql|postgresql|mongodb):\/\/[^:]+:[^@]+@/g, action:"mask", mask:()=>"[DB_CONN_REDACTED]"},
+  {name:"COOKIE_HEADER", pattern:/Cookie:\s*.+=.+/g, action:"mask", mask:()=>"Cookie: [REDACTED]"},
+  {name:"PASSWORD_KEYWORD", pattern:/(?:password|passwd|pwd|pw|pass|secret|secretkey|secretword|암호|비번|비밀번호|보안키|패스워드|패쓰워드|パスワード|密码|口令)\s*[=:]\s*\S+/gi, action:"mask", mask:m=>m.replace(/([=:])\s*\S+/, "$1[REDACTED]")},
+  {name:"AWS_ACCESS_KEY", pattern:/AKIA[A-Z0-9]{16}/g, action:"block", mask:()=>"AKIA****...****"},
+  {name:"USER_CREDENTIAL", pattern:/user(?:name|id|pass(?:word)?|pw)?\s*[=:\/]\s*\S+/gi, action:"mask", mask:m=>m.replace(/([=:\/])\s*\S+/, "$1[REDACTED]")},
+  {name:"ACCOUNT_KEYWORD", pattern:/(?:로그인|아이디|비번|비밀번호|계정|사용자|login|account|pass(?:word)?|pw|secret|ログイン|アカウント|ユーザー|账号|账户|用户名)\s*[=:\/]\s*\S+/gi, action:"mask", mask:m=>m.replace(/([=:\/])\s*\S+/, "$1[REDACTED]")},
+  {name:"ACCOUNT_BLOCK", pattern:/계정\s*[:\/]\s*\S+\s*\/\s*\S+/gi, action:"mask", mask:()=>"계정: [REDACTED]"},
+];
+const HIGH_RISK_RULES = ["ANTHROPIC_KEY","OPENAI_KEY","GEMINI_KEY","AWS_ACCESS_KEY","PRIVATE_KEY"];
+
+function clientScanText(text) {
+  const results = [];
+  for (const rule of CLIENT_RULES) {
+    const matches = text.match(rule.pattern);
+    if (matches) results.push({rule: rule.name, action: rule.action, count: matches.length});
+  }
+  return results;
+}
+
+function clientMaskText(text) {
+  let result = text;
+  for (const rule of CLIENT_RULES) {
+    result = result.replace(rule.pattern, (m) => rule.mask(m));
+  }
+  return result;
+}
+
+function clientApplyResponseFilter(text) {
+  if (!filterEnabled) return text;
+  let result = text;
+  for (const rule of CLIENT_RULES) {
+    if (!HIGH_RISK_RULES.includes(rule.name)) continue;
+    result = result.replace(rule.pattern, (m) => rule.mask(m));
+  }
+  return result;
+}
+
+// ═══════════════════════════════════════════════════
+// MARKDOWN PARSER
+// ═══════════════════════════════════════════════════
+function parseMarkdown(text) {
+  let html = '';
+  const lines = text.split('\n');
+  let inCode = false, codeLang = '', codeLines = [];
+  let inTable = false, tableRows = [];
+
+  function flushTable() {
+    if (!tableRows.length) return '';
+    let t = '<table class=""><thead><tr>';
+    const headers = tableRows[0].split('|').filter((c,i,a)=>i>0&&i<a.length-1);
+    headers.forEach(h=>{ t += `<th>${h.trim()}</th>`; });
+    t += '</tr></thead><tbody>';
+    for (let i=2; i<tableRows.length; i++) {
+      const cells = tableRows[i].split('|').filter((c,ii,a)=>ii>0&&ii<a.length-1);
+      t += '<tr>'; cells.forEach(c=>{ t += `<td>${c.trim()}</td>`; }); t += '</tr>';
+    }
+    t += '</tbody></table>';
+    tableRows = [];
+    return t;
+  }
+
+  function processInline(s) {
+    s = s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    s = s.replace(/`([^`]+)`/g, '<code>$1</code>');
+    s = s.replace(/\*(.+?)\*/g, '<em>$1</em>');
+    return s;
+  }
+
+  for (let i=0; i<lines.length; i++) {
+    const line = lines[i];
+    if (!inCode && line.startsWith('```')) {
+      if (inTable) { html += flushTable(); inTable = false; }
+      inCode = true; codeLang = line.slice(3).trim(); codeLines = [];
+      continue;
+    }
+    if (inCode) {
+      if (line.startsWith('```')) {
+        const codeContent = codeLines.join('\n').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        html += `<div class="code-block-wrap"><div class="code-block-header"><span class="code-lang">${codeLang||'code'}</span><button class="btn-copy-code" onclick="copyCodeBlock(this)">Copy</button></div><div class="code-body"><pre>${codeContent}</pre></div></div>`;
+        inCode = false; codeLang = ''; codeLines = [];
+      } else { codeLines.push(line); }
+      continue;
+    }
+    if (line.includes('|') && line.trim().startsWith('|')) {
+      inTable = true; tableRows.push(line); continue;
+    } else if (inTable) { html += flushTable(); inTable = false; }
+    if (!line.trim()) { html += '<br>'; continue; }
+    if (line.startsWith('### ')) { html += `<h3>${processInline(line.slice(4))}</h3>`; continue; }
+    if (line.startsWith('## ')) { html += `<h2>${processInline(line.slice(3))}</h2>`; continue; }
+    if (line.startsWith('# ')) { html += `<h1>${processInline(line.slice(2))}</h1>`; continue; }
+    if (line.startsWith('> ')) { html += `<blockquote>${processInline(line.slice(2))}</blockquote>`; continue; }
+    if (/^[-*]\s/.test(line)) { html += `<ul><li>${processInline(line.slice(2))}</li></ul>`; continue; }
+    if (/^\d+\.\s/.test(line)) { html += `<ol><li>${processInline(line.replace(/^\d+\.\s/, ''))}</li></ol>`; continue; }
+    html += `<p>${processInline(line)}</p>`;
+  }
+  if (inTable) html += flushTable();
+  // Merge consecutive ul/ol
+  html = html.replace(/<\/ul>\s*<ul>/g,'').replace(/<\/ol>\s*<ol>/g,'');
+  return html;
+}
+
+function copyCodeBlock(btn) {
+  const pre = btn.closest('.code-block-wrap').querySelector('pre');
+  navigator.clipboard.writeText(pre.textContent).then(()=>{
+    btn.textContent='Copied!'; setTimeout(()=>btn.textContent='Copy',2000);
+  });
+}
+
+// ═══════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════
+let currentLang = 'ko';
+let jwtToken = null;
+let userRole = null;
+let userEmail = null;
+let userModifiedTemplate = false;
+let filterEnabled = false;
+let filterLevel = 1;
+let filterCustomRules = [];
+let filterAllowlist = [];
+let rawResponseText = '';
+let typingQueue = [];
+let typingActive = false;
+let streamingDone = false;
+let startTime = null;
+
+const QUESTION_TYPE_TEMPLATE_KEY = {
+  code_review:"instruction_template.code_review", code_gen:"instruction_template.code_gen",
+  error_fix:"instruction_template.error_fix", refactor:"instruction_template.refactor",
+  unit_test:"instruction_template.unit_test", db_design:"instruction_template.db_design",
+  api_design:"instruction_template.api_design", explain:"instruction_template.explain",
+  direct:"instruction_template.direct",
+};
+
+const RESPONSE_FORMAT_MAP = {
+  "기본 (마크다운)":"기본 마크다운 형식으로 응답해줘.", "코드 위주":"설명 최소화, 코드 블록 중심으로 응답해줘.",
+  "단계별 설명":"번호를 붙여 단계별로 설명해줘.", "간결하게":"핵심만 3줄 이내로 요약해서 응답해줘.",
+  "상세하게":"배경 지식부터 상세하게 설명해줘.", "표/비교 형식":"비교 항목은 표(table)로 정리해줘.",
+  "Default (Markdown)":"Respond in default markdown format.", "Code Focused":"Minimize explanation, focus on code blocks.",
+  "Step by Step":"Explain step by step with numbered list.", "Concise":"Summarize in 3 lines or less.",
+  "Detailed":"Explain in detail from background knowledge.", "Table/Compare":"Use table format for comparisons.",
+};
+const RESPONSE_LANGUAGE_MAP = {
+  "자동 (AI 판단)":"", "영어":"Respond in English only.", "한국어":"반드시 한국어로만 응답해줘.",
+  "일본어":"Respond in Japanese only.", "중국어 (간체)":"Respond in Simplified Chinese only (Mainland China).",
+  "중국어 (번체-대만)":"Respond in Traditional Chinese only (Taiwan).", "중국어 (번체-홍콩)":"Respond in Traditional Chinese only (Hong Kong).",
+  "English":"Respond in English only.", "Korean":"반드시 한국어로만 응답해줘.", "Japanese":"Respond in Japanese only.",
+  "Chinese (Simplified)":"Respond in Simplified Chinese only (Mainland China).",
+  "Chinese (Traditional-TW)":"Respond in Traditional Chinese only (Taiwan).",
+  "Chinese (Traditional-HK)":"Respond in Traditional Chinese only (Hong Kong).",
+  "Auto (AI decides)":"",
+};
+
+// ═══════════════════════════════════════════════════
+// I18N
+// ═══════════════════════════════════════════════════
+function t(key) {
+  const dict = I18N[currentLang] || I18N.ko;
+  return dict[key] !== undefined ? dict[key] : (I18N.ko[key] || key);
+}
+
+function setLanguage(lang) {
+  currentLang = lang;
+  const dict = I18N[lang] || I18N.ko;
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    const val = dict[key] !== undefined ? dict[key] : (I18N.ko[key]);
+    if (val !== undefined) el.textContent = val;
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    const key = el.getAttribute('data-i18n-placeholder');
+    const val = dict[key] !== undefined ? dict[key] : (I18N.ko[key]);
+    if (val !== undefined) el.placeholder = val;
+  });
+  document.querySelectorAll('option[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    const val = dict[key] !== undefined ? dict[key] : (I18N.ko[key]);
+    if (val !== undefined) el.textContent = val;
+  });
+  document.getElementById('lang-select').value = lang;
+  // Replace template in textarea if not modified
+  const selectedType = document.getElementById('question-type')?.value;
+  if (selectedType && !userModifiedTemplate) {
+    const templateKey = QUESTION_TYPE_TEMPLATE_KEY[selectedType];
+    const template = dict[templateKey] !== undefined ? dict[templateKey] : (I18N.ko[templateKey] || '');
+    document.getElementById('request-text').value = template;
+  }
+  // Update filter toggle label
+  updateFilterToggleLabel();
+}
+
+function updateFilterToggleLabel() {
+  const lbl = document.getElementById('filter-toggle-label');
+  if (lbl) lbl.textContent = filterEnabled ? t('filter.toggle_on') : t('filter.toggle_off');
+}
+
+// ═══════════════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════════════
+function showToast(msg, type='normal', duration=3500) {
+  const c = document.getElementById('toast-container');
+  const el = document.createElement('div');
+  el.className = 'toast' + (type==='warn'?' warn':'') + (type==='error'?' error':'');
+  el.textContent = msg;
+  c.appendChild(el);
+  setTimeout(()=>{ el.style.opacity='0'; el.style.transition='opacity 0.3s'; setTimeout(()=>el.remove(),300); }, duration);
+}
+
+// ═══════════════════════════════════════════════════
+// AUTH
+// ═══════════════════════════════════════════════════
+function updateAuthUI() {
+  const loggedIn = !!jwtToken;
+  document.getElementById('btn-login').style.display = loggedIn ? 'none' : '';
+  document.getElementById('btn-logout').style.display = loggedIn ? '' : 'none';
+  document.getElementById('btn-settings').style.display = (loggedIn && userRole==='admin') ? '' : 'none';
+  document.getElementById('welcome-screen').style.display = loggedIn ? 'none' : 'flex';
+  document.getElementById('main-container').style.display = loggedIn ? 'flex' : 'none';
+  const mb = document.getElementById('model-badge');
+  if (loggedIn) {
+    mb.style.display = '';
+    mb.textContent = document.getElementById('ai-model-select').value;
+  } else {
+    mb.style.display = 'none';
+  }
+}
+
+async function doLogin(username, password) {
+  const isAdmin = username === 'admin';
+  const url = isAdmin ? '/api/admin/login' : '/api/user/login';
+  try {
+    const res = await fetch(url, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({username, password})
+    });
+    if (!res.ok) { showToast(t('login.error'), 'error'); return; }
+    const data = await res.json();
+    jwtToken = data.access_token;
+    userRole = data.role;
+    userEmail = username;
+    closeModal('login-modal');
+    updateAuthUI();
+    loadFilterSettings();
+    if (!isAdmin && data.password_changed === false) {
+      openModal('new-password-modal');
+    }
+  } catch(e) { showToast(t('login.error'), 'error'); }
+}
+
+function logout() {
+  jwtToken = null; userRole = null; userEmail = null;
+  updateAuthUI();
+}
+
+// ═══════════════════════════════════════════════════
+// FILTER SETTINGS
+// ═══════════════════════════════════════════════════
+async function loadFilterSettings() {
+  if (!jwtToken) return;
+  try {
+    const res = await fetch('/api/admin/filter', {headers:{'Authorization':'Bearer '+jwtToken}});
+    if (res.ok) {
+      const d = await res.json();
+      filterEnabled = d.enabled || false;
+      filterLevel = d.level || 1;
+      filterCustomRules = d.custom_rules || [];
+      filterAllowlist = d.allowlist || [];
+    }
+  } catch(e){}
+}
+
+// ═══════════════════════════════════════════════════
+// TYPING EFFECT
+// ═══════════════════════════════════════════════════
+let typingInterval = null;
+
+function startTyping() {
+  if (typingActive) return;
+  typingActive = true;
+  typingInterval = setInterval(() => {
+    if (typingQueue.length === 0) {
+      if (streamingDone) {
+        clearInterval(typingInterval);
+        typingInterval = null;
+        typingActive = false;
+        finishResponse();
+      }
+      return;
+    }
+    const speed = typingQueue.length > 50 ? 3 : 1;
+    const chars = typingQueue.splice(0, speed).join('');
+    rawResponseText += chars;
+    const wrap = document.getElementById('response-wrap');
+    wrap.innerHTML = escapeHtml(rawResponseText) + '<span class="typing-cursor">|</span>';
+    const rb = document.getElementById('response-body');
+    rb.scrollTop = rb.scrollHeight;
+  }, 20);
+}
+
+function escapeHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function finishResponse() {
+  const filtered = clientApplyResponseFilter(rawResponseText);
+  const wrap = document.getElementById('response-wrap');
+  wrap.innerHTML = '<div class="md-wrap">' + parseMarkdown(filtered) + '</div>';
+  document.getElementById('response-time').style.display = '';
+  document.getElementById('response-time').textContent = '✓ ' + ((Date.now()-startTime)/1000).toFixed(2) + 's';
+  document.getElementById('btn-copy-response').style.display = '';
+  document.getElementById('scroll-btns').style.display = 'flex';
+  document.getElementById('btn-send').disabled = false;
+  document.getElementById('btn-send').innerHTML = t('btn.send');
+}
+
+// ═══════════════════════════════════════════════════
+// SEND REQUEST
+// ═══════════════════════════════════════════════════
+async function sendRequest() {
+  if (!jwtToken) { showToast(t('login.error'), 'error'); return; }
+  const requestText = document.getElementById('request-text').value.trim();
+  if (!requestText) { showToast('지시 내용을 입력해주세요.', 'warn'); return; }
+
+  // Client-side filter check
+  if (filterEnabled) {
+    const scanResults = clientScanText(requestText);
+    if (scanResults.length > 0) {
+      const ruleNames = scanResults.map(r=>r.rule).join(', ');
+      if (filterLevel === 3) {
+        showToast('🚫 ' + t('filter.level3') + ' (' + ruleNames + ')', 'error');
+        showToast('💡 API 키는 [설정 관리 > API KEY]에 등록하세요.', 'warn', 5000);
+        showToast('💡 로그는 Authorization / Cookie 값 마스킹 후 붙여넣기 하세요.', 'warn', 6000);
+        showToast('💡 샘플 데이터는 더미 값으로 교체하세요. (예: sk-dummy-xxx)', 'warn', 7000);
+        document.getElementById('request-text').style.background = '#fff0f0';
+        setTimeout(()=>{ document.getElementById('request-text').style.background = ''; }, 3000);
+        return;
+      }
+      if (filterLevel === 2) {
+        const masked = clientMaskText(requestText);
+        document.getElementById('request-text').value = masked;
+        showToast('⚠️ 민감정보가 자동 마스킹되었습니다. (' + ruleNames + ')', 'warn');
+      }
+      if (filterLevel === 1) {
+        showToast('⚠️ 민감정보로 보이는 내용이 포함되어 있습니다. (' + ruleNames + ')', 'warn');
+        document.getElementById('request-text').style.background = '#fff8e1';
+        setTimeout(()=>{ document.getElementById('request-text').style.background = ''; }, 2000);
+      }
+    }
+  }
+
+  const finalText = document.getElementById('request-text').value;
+  rawResponseText = '';
+  typingQueue = [];
+  typingActive = false;
+  streamingDone = false;
+  startTime = Date.now();
+
+  document.getElementById('response-wrap').innerHTML = '';
+  document.getElementById('response-time').style.display = 'none';
+  document.getElementById('btn-copy-response').style.display = 'none';
+  document.getElementById('scroll-btns').style.display = 'none';
+  document.getElementById('btn-send').disabled = true;
+  document.getElementById('btn-send').innerHTML = '<div class="spinner"></div>';
+
+  const body = {
+    ai_model: document.getElementById('ai-model-select').value,
+    question_type: document.getElementById('question-type').value,
+    tech_stack: document.getElementById('tech-stack').value,
+    request_text: finalText,
+    response_format: document.getElementById('response-format').value,
+    response_language: document.getElementById('response-language').value,
+  };
+
+  try {
+    const res = await fetch('/api/ai/ask', {
+      method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+jwtToken},
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(()=>({}));
+      showToast(err.detail || '오류가 발생했습니다.', 'error');
+      document.getElementById('btn-send').disabled = false;
+      document.getElementById('btn-send').textContent = t('btn.send');
+      return;
+    }
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    const readLoop = async () => {
+      while(true) {
+        const {done, value} = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, {stream:true});
+        const lines = buffer.split('\n');
+        buffer = lines.pop();
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue;
+          const data = line.slice(6);
+          if (data === '[DONE]') { streamingDone = true; break; }
+          try {
+            const obj = JSON.parse(data);
+            if (obj.error) { showToast(obj.error, 'error'); streamingDone = true; break; }
+            if (obj.delta) {
+              typingQueue.push(...obj.delta.split(''));
+              if (!typingActive) startTyping();
+            }
+          } catch(e){}
+        }
+      }
+      streamingDone = true;
+      if (!typingActive && typingQueue.length === 0) finishResponse();
+    };
+    readLoop();
+  } catch(e) {
+    showToast('네트워크 오류: ' + e.message, 'error');
+    document.getElementById('btn-send').disabled = false;
+    document.getElementById('btn-send').textContent = t('btn.send');
+  }
+}
+
+// ═══════════════════════════════════════════════════
+// MODAL HELPERS
+// ═══════════════════════════════════════════════════
+function openModal(id) { document.getElementById(id).classList.add('active'); }
+function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+// ═══════════════════════════════════════════════════
+// SETTINGS MODAL
+// ═══════════════════════════════════════════════════
+async function openSettingsModal() {
+  openModal('settings-modal');
+  // Load API keys
+  try {
+    const res = await fetch('/api/admin/apikeys', {headers:{'Authorization':'Bearer '+jwtToken}});
+    if (res.ok) {
+      const d = await res.json();
+      document.getElementById('apikey-anthropic').value = d.anthropic_key || '';
+      document.getElementById('apikey-openai').value = d.openai_key || '';
+      document.getElementById('apikey-gemini').value = d.gemini_key || '';
+    }
+  } catch(e){}
+  await loadAndRenderUsers();
+  await loadAndRenderFilter();
+}
+
+async function loadAndRenderUsers() {
+  try {
+    const res = await fetch('/api/admin/users', {headers:{'Authorization':'Bearer '+jwtToken}});
+    if (res.ok) {
+      const d = await res.json();
+      renderUsersTable(d.users || []);
+    }
+  } catch(e){}
+}
+
+function renderUsersTable(users) {
+  const tbody = document.getElementById('users-tbody');
+  tbody.innerHTML = '';
+  users.forEach(u => {
+    const tr = document.createElement('tr');
+    const statusText = u.password_changed ? t('users.status.changed') : t('users.status.unchanged');
+    const statusClass = u.password_changed ? 'status-changed' : 'status-unchanged';
+    tr.innerHTML = `
+      <td>${u.email}</td>
+      <td>
+        <div class="sk-cell">
+          <span class="sk-masked-text">${u.password_changed ? '—' : '****-****-****'}</span>
+          ${!u.password_changed ? `<button class="btn-sk-toggle" data-email="${u.email}" data-showing="false">${t('users.security_key.show')}</button>` : ''}
+          <button class="btn-sk-copy ${!u.password_changed ? '' : ''}" data-email="${u.email}" title="${t('users.security_key.copy')}" ${u.password_changed ? 'style="display:none"' : ''}>📋</button>
+        </div>
+      </td>
+      <td><span class="${statusClass}">${statusText}</span></td>
+      <td style="white-space:nowrap;display:flex;gap:4px;flex-wrap:wrap;">
+        <button class="btn-send-key" data-email="${u.email}">${t('users.send_key')}</button>
+        <button class="btn-reset-user" data-email="${u.email}">${t('users.reset')}</button>
+        <button class="btn-danger" data-email="${u.email}">${t('users.delete')}</button>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+  // Bind events
+  tbody.querySelectorAll('.btn-sk-toggle').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const email = btn.dataset.email;
+      const showing = btn.dataset.showing === 'true';
+      const cell = btn.closest('.sk-cell');
+      const maskedSpan = cell.querySelector('.sk-masked-text');
+      const copyBtn = cell.querySelector('.btn-sk-copy');
+      if (!showing) {
+        try {
+          const res = await fetch(`/api/admin/users/${encodeURIComponent(email)}/security-key`, {headers:{'Authorization':'Bearer '+jwtToken}});
+          if (res.ok) {
+            const d = await res.json();
+            maskedSpan.textContent = d.security_key;
+            maskedSpan.dataset.plainKey = d.security_key;
+            btn.textContent = t('users.security_key.hide');
+            btn.dataset.showing = 'true';
+            if (copyBtn) { copyBtn.classList.add('active'); }
+          } else { showToast('보안키를 가져올 수 없습니다.', 'warn'); }
+        } catch(e){}
+      } else {
+        maskedSpan.textContent = '****-****-****';
+        btn.textContent = t('users.security_key.show');
+        btn.dataset.showing = 'false';
+        if (copyBtn) { copyBtn.classList.remove('active'); }
+      }
+    });
+  });
+  tbody.querySelectorAll('.btn-sk-copy').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const cell = btn.closest('.sk-cell');
+      const key = cell.querySelector('.sk-masked-text').dataset.plainKey || '';
+      if (key) {
+        navigator.clipboard.writeText(key).then(()=>showToast(t('users.security_key.copied')));
+      }
+    });
+  });
+  tbody.querySelectorAll('.btn-send-key').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const email = btn.dataset.email;
+      try {
+        const res = await fetch(`/api/admin/users/${encodeURIComponent(email)}/send-key`, {
+          method:'POST', headers:{'Authorization':'Bearer '+jwtToken}
+        });
+        const d = await res.json();
+        if (d.console_key) showToast('이메일 발송 실패 — 콘솔 확인', 'warn');
+        else showToast(d.message || '발송 완료');
+      } catch(e){ showToast('오류', 'error'); }
+    });
+  });
+  tbody.querySelectorAll('.btn-reset-user').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const email = btn.dataset.email;
+      if (!confirm(`${email} 사용자의 비밀번호를 초기화하시겠습니까?`)) return;
+      try {
+        const res = await fetch(`/api/admin/users/${encodeURIComponent(email)}/reset`, {
+          method:'POST', headers:{'Authorization':'Bearer '+jwtToken}
+        });
+        const d = await res.json();
+        showToast(d.message || '초기화 완료');
+        await loadAndRenderUsers();
+      } catch(e){ showToast('오류', 'error'); }
+    });
+  });
+  tbody.querySelectorAll('.btn-danger').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const email = btn.dataset.email;
+      if (!confirm(`${email} 사용자를 삭제하시겠습니까?`)) return;
+      try {
+        const res = await fetch(`/api/admin/users/${encodeURIComponent(email)}`, {
+          method:'DELETE', headers:{'Authorization':'Bearer '+jwtToken}
+        });
+        const d = await res.json();
+        showToast(d.message || '삭제 완료');
+        await loadAndRenderUsers();
+      } catch(e){ showToast('오류', 'error'); }
+    });
+  });
+}
+
+async function loadAndRenderFilter() {
+  await loadFilterSettings();
+  document.getElementById('filter-toggle').checked = filterEnabled;
+  document.getElementById('filter-level').value = String(filterLevel);
+  updateFilterToggleLabel();
+  renderCustomRules();
+  renderAllowlist();
+}
+
+function renderCustomRules() {
+  const tbody = document.getElementById('custom-rules-tbody');
+  tbody.innerHTML = '';
+  filterCustomRules.forEach((rule, idx) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${rule.name}</td><td><code>${rule.pattern}</code></td><td>${rule.action}</td>
+      <td><button class="btn-danger" onclick="removeCustomRule(${idx})">✕</button></td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+function removeCustomRule(idx) {
+  filterCustomRules.splice(idx, 1);
+  renderCustomRules();
+}
+
+function renderAllowlist() {
+  const container = document.getElementById('allowlist-tags');
+  container.innerHTML = '';
+  filterAllowlist.forEach((domain, idx) => {
+    const span = document.createElement('span');
+    span.className = 'allowlist-tag';
+    span.innerHTML = `${domain} <button onclick="removeAllowlist(${idx})">✕</button>`;
+    container.appendChild(span);
+  });
+}
+
+function removeAllowlist(idx) {
+  filterAllowlist.splice(idx, 1);
+  renderAllowlist();
+}
+
+// ═══════════════════════════════════════════════════
+// PREVIEW MODAL
+// ═══════════════════════════════════════════════════
+function buildSystemPrompt() {
+  const fmt = document.getElementById('response-format').value;
+  const lang = document.getElementById('response-language').value;
+  const fmtStr = RESPONSE_FORMAT_MAP[fmt] || '기본 마크다운 형식으로 응답해줘.';
+  const langStr = RESPONSE_LANGUAGE_MAP[lang] || '';
+  return [fmtStr, langStr].filter(Boolean).join(' ');
+}
+
+function buildUserPrompt() {
+  const stack = document.getElementById('tech-stack').value;
+  const text = document.getElementById('request-text').value;
+  if (stack && stack !== '지정 안 함' && stack !== 'Not Specified' && stack !== '不指定' && stack !== '指定なし' && stack !== '指定なし') {
+    return `[기술 스택: ${stack}]\n\n${text}`;
+  }
+  return text;
+}
+
+function openPreviewModal() {
+  document.getElementById('preview-system-content').textContent = buildSystemPrompt();
+  document.getElementById('preview-user-content').textContent = buildUserPrompt();
+  // Filter scan
+  const filterSec = document.getElementById('preview-filter-section');
+  const filterContent = document.getElementById('preview-filter-content');
+  filterSec.style.display = '';
+  if (!filterEnabled) {
+    filterContent.textContent = '✅ 민감정보 없음 (필터 비활성)';
+  } else {
+    const results = clientScanText(document.getElementById('request-text').value);
+    if (results.length === 0) {
+      filterContent.textContent = '✅ 민감정보 없음';
+    } else {
+      filterContent.innerHTML = results.map(r => {
+        const icon = r.action==='block' ? '🚫' : (r.action==='warn' ? '⚠️' : '🔒');
+        const color = r.action==='block' ? '#c0392b' : (r.action==='warn' ? '#e67e22' : '#2980b9');
+        return `<span style="color:${color}">${icon} ${r.rule} — ${r.action} (${r.count}건)</span>`;
+      }).join('<br>');
+    }
+  }
+  openModal('preview-modal');
+}
+
+// ═══════════════════════════════════════════════════
+// TOKEN COUNTER
+// ═══════════════════════════════════════════════════
+function updateTokenCount() {
+  const text = document.getElementById('request-text').value;
+  const count = Math.ceil(text.length / 4);
+  document.getElementById('token-count-val').textContent = count.toLocaleString();
+}
+
+// ═══════════════════════════════════════════════════
+// PANEL DIVIDER DRAG
+// ═══════════════════════════════════════════════════
+function initDivider() {
+  const divider = document.getElementById('panel-divider');
+  const rp = document.getElementById('request-panel');
+  const resp = document.getElementById('response-panel');
+  const container = document.getElementById('main-container');
+  let dragging = false;
+  divider.addEventListener('mousedown', e => {
+    dragging = true;
+    divider.classList.add('dragging');
+    document.body.style.userSelect = 'none';
+    document.body.style.cursor = 'col-resize';
+    e.preventDefault();
+  });
+  document.addEventListener('mousemove', e => {
+    if (!dragging) return;
+    const rect = container.getBoundingClientRect();
+    let ratio = (e.clientX - rect.left) / rect.width;
+    ratio = Math.max(1/3, Math.min(2/3, ratio));
+    rp.style.width = (ratio * 100) + '%';
+    resp.style.width = ((1 - ratio) * 100) + '%';
+  });
+  document.addEventListener('mouseup', () => {
+    if (!dragging) return;
+    dragging = false;
+    divider.classList.remove('dragging');
+    document.body.style.userSelect = '';
+    document.body.style.cursor = '';
+  });
+}
+
+// ═══════════════════════════════════════════════════
+// INIT & EVENT LISTENERS
+// ═══════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  initDivider();
+  setLanguage('ko');
+  updateAuthUI();
+
+  // Lang select
+  document.getElementById('lang-select').addEventListener('change', e => setLanguage(e.target.value));
+
+  // Login
+  document.getElementById('btn-login').addEventListener('click', () => openModal('login-modal'));
+  document.getElementById('login-modal-close').addEventListener('click', () => closeModal('login-modal'));
+  document.getElementById('login-modal').addEventListener('click', e => { if(e.target===e.currentTarget) closeModal('login-modal'); });
+  document.getElementById('login-submit').addEventListener('click', () => {
+    const u = document.getElementById('login-username').value.trim();
+    const p = document.getElementById('login-password').value;
+    if (!u || !p) { showToast(t('login.error'), 'error'); return; }
+    doLogin(u, p);
+  });
+  document.getElementById('login-password').addEventListener('keydown', e => { if(e.key==='Enter') document.getElementById('login-submit').click(); });
+  document.getElementById('login-username').addEventListener('keydown', e => { if(e.key==='Enter') document.getElementById('login-password').focus(); });
+
+  // Logout
+  document.getElementById('btn-logout').addEventListener('click', logout);
+
+  // Settings
+  document.getElementById('btn-settings').addEventListener('click', openSettingsModal);
+  document.getElementById('settings-modal-close-x').addEventListener('click', () => closeModal('settings-modal'));
+  document.getElementById('settings-modal-close').addEventListener('click', () => closeModal('settings-modal'));
+  document.getElementById('settings-modal').addEventListener('click', e => { if(e.target===e.currentTarget) closeModal('settings-modal'); });
+
+  // Settings tabs
+  document.getElementById('settings-tabs').addEventListener('click', e => {
+    if (!e.target.dataset.tab) return;
+    document.querySelectorAll('#settings-tabs .tab-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+    e.target.classList.add('active');
+    document.getElementById(e.target.dataset.tab).classList.add('active');
+  });
+
+  // Change password
+  document.getElementById('btn-change-password').addEventListener('click', async () => {
+    const cur = document.getElementById('pw-current').value;
+    const nw = document.getElementById('pw-new').value;
+    const cf = document.getElementById('pw-confirm').value;
+    if (nw !== cf) { showToast('새 암호가 일치하지 않습니다.', 'error'); return; }
+    if (nw.length < 8) { showToast('새 암호는 8자 이상이어야 합니다.', 'error'); return; }
+    try {
+      const res = await fetch('/api/admin/change-password', {
+        method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+jwtToken},
+        body: JSON.stringify({current_password:cur, new_password:nw})
+      });
+      const d = await res.json();
+      if (res.ok) { showToast(d.message); closeModal('settings-modal'); logout(); }
+      else showToast(d.detail || '오류', 'error');
+    } catch(e){ showToast('오류', 'error'); }
+  });
+
+  // Save API keys
+  document.getElementById('btn-save-apikeys').addEventListener('click', async () => {
+    try {
+      const res = await fetch('/api/admin/apikeys', {
+        method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+jwtToken},
+        body: JSON.stringify({
+          anthropic_key: document.getElementById('apikey-anthropic').value,
+          openai_key: document.getElementById('apikey-openai').value,
+          gemini_key: document.getElementById('apikey-gemini').value,
+        })
+      });
+      const d = await res.json();
+      if (res.ok) showToast(d.message);
+      else showToast(d.detail || '오류', 'error');
+    } catch(e){ showToast('오류', 'error'); }
+  });
+
+  // Add user
+  document.getElementById('btn-add-user').addEventListener('click', async () => {
+    const email = document.getElementById('new-user-email').value.trim();
+    if (!email) { showToast('이메일을 입력해주세요.', 'warn'); return; }
+    try {
+      const res = await fetch('/api/admin/users', {
+        method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+jwtToken},
+        body: JSON.stringify({email})
+      });
+      const d = await res.json();
+      if (res.ok) { showToast(d.message); document.getElementById('new-user-email').value=''; await loadAndRenderUsers(); }
+      else showToast(d.detail || '오류', 'error');
+    } catch(e){ showToast('오류', 'error'); }
+  });
+
+  // Filter toggle
+  document.getElementById('filter-toggle').addEventListener('change', e => {
+    filterEnabled = e.target.checked;
+    updateFilterToggleLabel();
+  });
+  document.getElementById('filter-level').addEventListener('change', e => { filterLevel = parseInt(e.target.value); });
+
+  // Add custom rule
+  document.getElementById('btn-add-rule').addEventListener('click', () => {
+    const name = document.getElementById('rule-name').value.trim();
+    const pattern = document.getElementById('rule-pattern').value.trim();
+    const action = document.getElementById('rule-action').value;
+    if (!name || !pattern) { showToast('룰명과 패턴을 입력해주세요.', 'warn'); return; }
+    filterCustomRules.push({name, pattern, action});
+    renderCustomRules();
+    document.getElementById('rule-name').value='';
+    document.getElementById('rule-pattern').value='';
+  });
+
+  // Add allowlist
+  document.getElementById('btn-add-allowlist').addEventListener('click', () => {
+    const domain = document.getElementById('allowlist-input').value.trim();
+    if (!domain) return;
+    filterAllowlist.push(domain);
+    renderAllowlist();
+    document.getElementById('allowlist-input').value='';
+  });
+
+  // Save filter
+  document.getElementById('btn-save-filter').addEventListener('click', async () => {
+    try {
+      const res = await fetch('/api/admin/filter', {
+        method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+jwtToken},
+        body: JSON.stringify({enabled:filterEnabled, level:filterLevel, custom_rules:filterCustomRules, allowlist:filterAllowlist})
+      });
+      const d = await res.json();
+      if (res.ok) showToast(d.message || t('settings.tab.filter') + ' 저장 완료');
+      else showToast(d.detail || '오류', 'error');
+    } catch(e){ showToast('오류', 'error'); }
+  });
+
+  // New password modal
+  document.getElementById('newpw-submit').addEventListener('click', async () => {
+    const nw = document.getElementById('newpw-input').value;
+    const cf = document.getElementById('newpw-confirm').value;
+    if (nw !== cf) { showToast('새 암호가 일치하지 않습니다.', 'error'); return; }
+    if (nw.length < 8) { showToast('새 암호는 8자 이상이어야 합니다.', 'error'); return; }
+    try {
+      const res = await fetch('/api/user/change-password', {
+        method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+jwtToken},
+        body: JSON.stringify({current_password: document.getElementById('login-password')?.value || '', new_password: nw})
+      });
+      if (res.ok) { showToast('암호가 설정되었습니다.'); closeModal('new-password-modal'); }
+      else { const d = await res.json(); showToast(d.detail || '오류', 'error'); }
+    } catch(e){ showToast('오류', 'error'); }
+  });
+
+  // Preview modal
+  document.getElementById('btn-preview').addEventListener('click', openPreviewModal);
+  document.getElementById('preview-modal-close-x').addEventListener('click', () => closeModal('preview-modal'));
+  document.getElementById('preview-modal-close').addEventListener('click', () => closeModal('preview-modal'));
+  document.getElementById('preview-modal').addEventListener('click', e => { if(e.target===e.currentTarget) closeModal('preview-modal'); });
+
+  // Send
+  document.getElementById('btn-send').addEventListener('click', sendRequest);
+
+  // Reset
+  document.getElementById('btn-reset').addEventListener('click', () => {
+    document.getElementById('request-text').value='';
+    document.getElementById('response-wrap').innerHTML='';
+    document.getElementById('response-time').style.display='none';
+    document.getElementById('btn-copy-response').style.display='none';
+    document.getElementById('scroll-btns').style.display='none';
+    rawResponseText='';
+    userModifiedTemplate=false;
+    updateTokenCount();
+  });
+
+  // Copy response
+  document.getElementById('btn-copy-response').addEventListener('click', () => {
+    const filtered = clientApplyResponseFilter(rawResponseText);
+    navigator.clipboard.writeText(filtered).then(()=>showToast(t('btn.copy') + ' 완료'));
+  });
+
+  // Scroll btns
+  document.getElementById('btn-scroll-top').addEventListener('click', () => { document.getElementById('response-body').scrollTop = 0; });
+  document.getElementById('btn-scroll-bottom').addEventListener('click', () => { const rb = document.getElementById('response-body'); rb.scrollTop = rb.scrollHeight; });
+
+  // Question type change
+  document.getElementById('question-type').addEventListener('change', e => {
+    const key = QUESTION_TYPE_TEMPLATE_KEY[e.target.value];
+    const dict = I18N[currentLang] || I18N.ko;
+    const template = dict[key] !== undefined ? dict[key] : (I18N.ko[key] || '');
+    document.getElementById('request-text').value = template;
+    userModifiedTemplate = false;
+    updateTokenCount();
+  });
+
+  // Request text input
+  document.getElementById('request-text').addEventListener('input', () => {
+    userModifiedTemplate = true;
+    updateTokenCount();
+    autoResize(document.getElementById('request-text'));
+  });
+
+  // AI model change
+  document.getElementById('ai-model-select').addEventListener('change', e => {
+    const mb = document.getElementById('model-badge');
+    if (jwtToken) mb.textContent = e.target.value;
+  });
+
+  updateTokenCount();
+
+  // Health check
+  fetch('/api/health').then(r => {
+    if (r.ok) { document.getElementById('server-dot').style.background='#6db33f'; }
+  }).catch(() => { document.getElementById('server-dot').style.background='#c0392b'; });
+});
+
+function autoResize(el) {
+  el.style.height='auto';
+  el.style.height=(el.scrollHeight)+'px';
+}
+</script>
+</body>
+</html>
